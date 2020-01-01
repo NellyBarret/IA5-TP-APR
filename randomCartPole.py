@@ -8,7 +8,12 @@ import torch.nn as nn
 
 
 ## MEMO
-# action_sample : espace d'actions : 2 valuers (droite / gauche)
+# action : 2 valeurs (droite / gauche)
+# environment : [position of cart, velocity of cart, angle of pole, rotation rate of pole]
+# state / next_state = tableau de 4 elements
+# action : 0 ou 1
+# reward : 1 si la baton n'est pas tombé
+# done : True ou False
 
 
 class RandomAgent:

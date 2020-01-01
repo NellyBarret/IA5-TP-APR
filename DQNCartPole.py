@@ -6,6 +6,7 @@ import gym
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from keras import Sequential
 
 GAMMA = 0.95
 BATCH_SIZE = 20
@@ -91,19 +92,33 @@ from torch.optim import Adam
 
 
 class DQNAgent:
-    def __init__(self, observation_space, action_space):  # input_size, output_size,
-        self.input_size = 4  # input_size
-        self.output_size = 2  # output_size
-        self.model = nn.Sequential(nn.Linear(self.input_size, 30),
-                      nn.ReLU(),
-                      nn.Linear(30, 30),
-                      nn.ReLU(),
-                      nn.Linear(30, self.output_size))
-        self.memory = []
-        self.memory_max_size = 100000
-        self.action_space = action_space
-        self.observation_space = observation_space
-        self.exploration_rate = EXPLORATION_MAX
+    # def __init__(self, observation_space, action_space):  # input_size, output_size,
+    #     self.input_size = 4  # input_size
+    #     self.output_size = 2  # output_size
+    #     self.model = Sequential()
+    #     self.model.add(Dense(30, input_shape=(self.input_size,), activation="relu"))
+    #     self.model.add(Dense(30, activation="relu"))
+    #     self.model.add(Dense(self.output_size, activation="linear"))
+    #     self.model.compile(loss="mse", optimizer=Adam(lr=self.epsilon))
+    #     #
+    #     # self.model = nn.Sequential(nn.Linear(self.input_size, 30),
+    #     #               nn.ReLU(),
+    #     #               nn.Linear(30, 30),
+    #     #               nn.ReLU(),
+    #     #               nn.Linear(30, self.output_size))
+    #     self.memory = []
+    #     self.memory_max_size = 100000
+    #     self.action_space = action_space
+    #     self.observation_space = observation_space
+    #     self.exploration_rate = EXPLORATION_MAX
+    def __init__(self, learning_rate=0.01, state_size=4, action_size=2, hidden_size=10):
+        self.model = Sequential()
+        self.model.add(Dense(hidden_size, activation='relu', input_dim=state_size))
+        self.model.add(Dense(hidden_size, activation='relu'))
+        self.model.add(Dense(action_size, activation='linear'))
+
+        self.optimizer = Adam(lr=learning_rate)
+        self.model.compile(loss='mse', optimizer=self.optimizer)
 
     def remember(self, state, action, reward, next_state, done):
         """
@@ -138,7 +153,6 @@ class DQNAgent:
             self.model.fit(state, q_valeurs)
         self.epsilon *= EXPLORATION_DECAY
         self.epsilon = max(EXPLORATION_MIN, self.epsilon)
-
 
 
 # 2.3 - question 5

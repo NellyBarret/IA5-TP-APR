@@ -216,7 +216,10 @@ class DQNAgent:
                 if done:
                     y_target[0][action] = reward
                 else:
-                    y_target[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
+                    # TODO: DDQN
+                    pred_next_model = self.model.predict(next_state)[0]
+                    pred_next_target = self.target_model.predict(next_state)[0]
+                    y_target[0][action] = reward + self.gamma * numpy.max(pred_next_model)
                 x_batch.append(state[0])
                 y_batch.append(y_target[0])
 

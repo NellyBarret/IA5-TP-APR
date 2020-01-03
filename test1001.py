@@ -1,12 +1,15 @@
+import math
+
 import gym
 import numpy
 from keras import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from tensorflow import keras
 import random
+from pprint import pprint
 from collections import deque
 import matplotlib.pyplot as plt
-
 
 class Memory:
     """
@@ -19,7 +22,7 @@ class Memory:
         @param batch_size: taille du batch généré sur la mémoire de l'agent
         """
         self.max_size = max_size
-        self.memory = [[] for _ in range(self.max_size)]  # penser a initialiser pour ne pas avoir d'index out of range
+        self.memory = [[] for _ in range(self.max_size)]  # bien penser a initialiser la memoire pour ne pas avoir d'index out of range
         self.position = 0
         self.batch_size = batch_size
 
@@ -42,20 +45,12 @@ class Memory:
         """
         if (sum(len(item) > 0 for item in self.memory) < self.batch_size) or [] in self.memory:
             # pas assez d'experiences pour construire le batch ou il existe des expériences vides
-            # comme sample prend des éléments aléatoirement, on vérifie qu'il n'y a pas d'éléméents vides (sinon unpack)
-            # TODO: mieux expliquer
+            # comme sample prend des éléments aléatoirement, on vérifie qu'il n'y a pas d'éléméents vides (sinon unpack) TODO: mieux expliquer
             return None
         else:
             # creation du batch aleatoire parmi les elements de la memoire
             batch = random.sample(self.memory, self.batch_size)
             return batch
-
-    def __len__(self):
-        """
-        Retourne le nombre d'élélemnts (non nuls) dans la mémoire
-        :return: le nombre d'éléments dans la mémoire
-        """
-        return sum(len(item) > 0 for item in self.memory)  # len(self.memory)
 
 
 class DQNAgent:
@@ -70,7 +65,7 @@ class DQNAgent:
         self.state_size = params['state_size']  # taille de l'entrée du réseau
         self.action_size = params['action_size']  # taille de sortie du réseau
 
-        self.memory = Memory(params['memory_size'], params['batch_size'])  # deque(maxlen=100000) -- mémoire pour l'expérience replay
+        self.memory = deque(maxlen=100000)  # Memory(params['memory_size'], params['batch_size'])  # m&moire pour l'expérience replay
 
         self.gamma = params['gamma']
         self.learning_rate = params['learning_rate']
@@ -79,13 +74,6 @@ class DQNAgent:
         self.exploration_min = params['exploration_min']
 
         # model "de base"
-        # self.model = nn.Sequential(
-        #     nn.Linear(self.observation_space.shape[0], 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, self.action_space.n)
-        # )
         self.model = Sequential()
         self.model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
         self.model.add(Dense(24, activation='relu'))
@@ -166,8 +154,8 @@ class DQNAgent:
         @param next_state: l'état d'arrivée après exécution de l'action
         @param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
         """
-        self.memory.add(state, action, reward, next_state, done)
-        # self.memory.append((state, action, reward, next_state, done))
+        # self.memory.add(state, action, reward, next_state, done)
+        self.memory.append((state, action, reward, next_state, done))
 
     def experience_replay(self):
         """
@@ -209,20 +197,19 @@ class DQNAgent:
         #     if self.exploration_rate > self.exploration_min:
         #         self.exploration_rate *= self.exploration_decay
         x_batch, y_batch = [], []
-        minibatch = self.memory.sample()
-        if minibatch is not None:
-            for state, action, reward, next_state, done in minibatch:
-                y_target = self.model.predict(state)
-                if done:
-                    y_target[0][action] = reward
-                else:
-                    y_target[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
-                x_batch.append(state[0])
-                y_batch.append(y_target[0])
+        minibatch = random.sample(self.memory, min(len(self.memory), batch_size))
+        for state, action, reward, next_state, done in minibatch:
+            y_target = self.model.predict(state)
+            if done:
+                y_target[0][action] = reward
+            else:
+                y_target[0][action] = reward + self.gamma * numpy.max(self.model.predict(next_state)[0])
+            x_batch.append(state[0])
+            y_batch.append(y_target[0])
 
-            self.model.fit(numpy.array(x_batch), numpy.array(y_batch), batch_size=len(x_batch), verbose=0)
-            if self.exploration_rate > self.exploration_min:
-                self.exploration_rate *= self.exploration_decay
+        self.model.fit(numpy.array(x_batch), numpy.array(y_batch), batch_size=len(x_batch), verbose=0)
+        if self.exploration_rate > self.exploration_min:
+            self.exploration_rate *= self.exploration_decay
 
     def update_target_network(self):
         """
@@ -249,7 +236,7 @@ if __name__ == '__main__':
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
     memory_size = 100000
-    batch_size = 20  # 64
+    batch_size = 128  # 64
     gamma = 0.95  # 0.99
     learning_rate = 0.001
     exploration_rate = 1
@@ -257,7 +244,7 @@ if __name__ == '__main__':
     exploration_min = 0.01
 
     # constantes pour l'exécution
-    nb_episodes = 200
+    nb_episodes = 250
     update_target_network = 100
 
     # creation de l'agent avec ses paramètres
@@ -293,11 +280,11 @@ if __name__ == '__main__':
             if done:
                 print("epsiode", i, "- steps : ", steps, "- somme reward", sum_reward)
                 break
-            if steps % update_target_network == 0:
-                # on met à jour le target network tous les `update_target_network` pas
-                print("the target network is updating")
-                agent.update_target_network()
+            # if steps % update_target_network == 0:
+            #     # on met à jour le target network tous les `update_target_network` pas
+            #     print("the target network is updating")
+            #     agent.update_target_network()
             steps += 1
         liste_rewards.append(sum_reward)
     evolution_rewards(liste_rewards)
-    print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
+    print("Meilleure reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))

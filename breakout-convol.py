@@ -1,11 +1,26 @@
-import gym
-import numpy
-from keras import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
+import math
 import random
-from collections import deque
+
+import cv2
+import gym
+import keras
 import matplotlib.pyplot as plt
+import numpy
+from gym import wrappers
+
+## MEMO
+# action : 2 valeurs (droite / gauche)
+# environment : [position of cart, velocity of cart, angle of pole, rotation rate of pole]
+# state / next_state = tableau de 4 elements
+# action : 0 (rien), 1 (tirer), 2 (gauche) and 3 (droite)
+# reward : 1 si la baton n'est pas tombé
+# done : True ou False
+
+# frame = image de 210×160 pixels avec une palette de 128 couleurs
+from keras import Sequential, Input, Model
+from keras.layers import Dense, Conv2D, Convolution2D, Lambda, Flatten, merge
+from keras.losses import huber_loss
+from keras.optimizers import Adam, RMSprop
 
 
 class Memory:
@@ -15,8 +30,8 @@ class Memory:
     def __init__(self, max_size, batch_size):
         """
         Initialise la mémoire de l'agent
-        @param max_size: taille maximale de la mémoire (par défaut 100 000)
-        @param batch_size: taille du batch généré sur la mémoire de l'agent
+        :param max_size: taille maximale de la mémoire (par défaut 100 000)
+        :param batch_size: taille du batch généré sur la mémoire de l'agent
         """
         self.max_size = max_size
         self.memory = [[] for _ in range(self.max_size)]  # penser a initialiser pour ne pas avoir d'index out of range
@@ -26,11 +41,11 @@ class Memory:
     def add(self, state, action, reward, next_state, done):
         """
         Ajoute une expérience à la mémoire de l'agent
-        @param state: l'état courant de l'agent
-        @param action: l'action choisie par l'agent
-        @param reward: la récompense gagnée
-        @param next_state: l'état d'arrivée après exécution de l'action
-        @param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
+        :param state: l'état courant de l'agent
+        :param action: l'action choisie par l'agent
+        :param reward: la récompense gagnée
+        :param next_state: l'état d'arrivée après exécution de l'action
+        :param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
         """
         # on ajoute l'experience et on incremente la position dans la memoire
         self.memory[self.position] = [state, action, reward, next_state, done]
@@ -39,6 +54,7 @@ class Memory:
     def sample(self):
         """
         Construit un batch aléatoire sur la mémoire de l'agent
+        :return: le batch
         """
         if (sum(len(item) > 0 for item in self.memory) < self.batch_size) or [] in self.memory:
             # pas assez d'experiences pour construire le batch ou il existe des expériences vides
@@ -58,14 +74,14 @@ class Memory:
         return sum(len(item) > 0 for item in self.memory)  # len(self.memory)
 
 
-class DQNAgent:
+class BreakoutAgent:
     """
-    Classe représentant l'agent DQN et son réseau
+    Classe représentant l'agent du Breakout et son réseau
     """
     def __init__(self, params):
         """
         Initialise le réseau et l'agent
-        @param params: le dictionnaire contenant les paramètres du réseau et de l'agent
+        :param params: le dictionnaire contenant les paramètres du réseau et de l'agent
         """
         self.state_size = params['state_size']  # taille de l'entrée du réseau
         self.action_size = params['action_size']  # taille de sortie du réseau
@@ -78,53 +94,44 @@ class DQNAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
-        # model "de base"
-        # self.model = nn.Sequential(
-        #     nn.Linear(self.observation_space.shape[0], 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, self.action_space.n)
-        # )
-        self.model = Sequential()
-        self.model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.model.add(Dense(24, activation='relu'))
-        self.model.add(Dense(self.action_size, activation='linear'))
-        self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-        # self.model = Sequential()
-        # self.model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.model.add(Dense(48, activation='tanh'))
-        # self.model.add(Dense(self.action_size, activation='linear'))
-        # self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
-        #
-        # self.target_model = Sequential()
-        # self.target_model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.target_model.add(Dense(48, activation='tanh'))
-        # self.target_model.add(Dense(self.action_size, activation='linear'))
-        # self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
+        ATARI_SHAPE = (4, 105, 80)
+        frames_input = Input(ATARI_SHAPE, name='frames')
+        actions_input = Input((self.action_size,), name='filter')
+        # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
+        # TODO:
+        normalized = Lambda(lambda x: x / 255.0)(frames_input)
+        # The first hidden layer convolves 16 8×8 filters with stride 4 with the input image
+        # and applies a rectifier nonlinearity
+        conv_1 = Convolution2D(16, 8, 8, subsample=(4, 4), activation='relu')(normalized)
+        # The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity
+        conv_2 = Convolution2D(32, 4, 4, subsample=(2, 2), activation='relu')(conv_1)  # , data_format='channels_first'
+        conv_flattened = Flatten()(conv_2)
+        # The final hidden layer is fully-connected and consists of 256 rectifier units.
+        hidden = Dense(256, activation='relu')(conv_flattened)
+        output = Dense(self.action_size)(hidden)
+        filtered_output = merge([output, actions_input], mode='mul')
 
-        # self.model = Sequential(nn.Linear(self.state_size, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, self.action_size))
-        # target model pour la stabilité
-        self.target_model = Sequential()
-        self.target_model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.target_model.add(Dense(24, activation='relu'))
-        self.target_model.add(Dense(self.action_size, activation='linear'))
-        self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        self.model = Model(input=[frames_input, actions_input], output=filtered_output)
+        optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+        self.model.compile(optimizer, loss=huber_loss)
+
+        self.target_model = Model(input=[frames_input, actions_input], output=filtered_output)
+        optimizer2 = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+        self.target_model.compile(optimizer2, loss=huber_loss)
+
 
     def act(self, state, policy="greedy"):
         """
         Choisit une action pour l'état donné
-        @param state: l'état courant de l'agent
-        @param policy: la politique utilisée par l'agent
+        :param state: l'état courant de l'agent
+        :param policy: la politique utilisée par l'agent
+        :return: l'action choisie par la politique
         """
+
         if numpy.random.random() <= self.exploration_rate:
             return env.action_space.sample()
         return numpy.argmax(self.model.predict(state))
-        # argmax retourne l'indice de la maeilleure valeur
+        # argmax retourne l'indice de la meilleure valeur
         # if policy == "greedy":
         #     if numpy.random.rand() <= self.exploration_rate:
         #         # on retourne une action aléatoire (exploration)
@@ -160,12 +167,12 @@ class DQNAgent:
     def remember(self, state, action, reward, next_state, done):
         """
         Ajoute une expérience à la mémoire de l'agent
-        @param state: l'état courant de l'agent
-        @param action: l'action choisie par l'agent
-        @param reward: la récompense gagnée
-        @param next_state: l'état d'arrivée après exécution de l'action
-        @param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
-        """
+        :param state: l'état courant de l'agent
+        :param action: l'action choisie par l'agent
+        :param reward: la récompense gagnée
+        :param next_state: l'état d'arrivée après exécution de l'action
+        :param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
+        """""
         self.memory.add(state, action, reward, next_state, done)
         # self.memory.append((state, action, reward, next_state, done))
 
@@ -231,20 +238,29 @@ class DQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
 
-def evolution_rewards(liste_rewards):
+# 3 - question 1
+def preprocessing(observation):
     """
-    Trace l'évolution de la somme des récompenses par épisodes
+    Preprocessing des images (state) : réduction de la dimension (210*160*3 => 84*84*1) + noir et blanc
     """
-    plt.plot([i for i in range(len(liste_rewards))], liste_rewards)
-    plt.title("Evolution de la somme des récompenses par épisodes")
-    plt.xlabel('Nombre d\'épisodes')
-    plt.ylabel('Somme des récompenses')
-    plt.show()
+    observation = cv2.cvtColor(cv2.resize(observation, (84, 110)), cv2.COLOR_BGR2GRAY)
+    observation = observation[26:110, :]
+    ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
+    return numpy.reshape(observation, (84, 84, 1))
+
+
+def test_preprocessing(action):
+    state, reward, done, _ = env.step(action)
+    print("Before processing: " + str(numpy.array(state).shape))
+    state = preprocessing(state)
+    print("After processing: " + str(numpy.array(state).shape))
 
 
 if __name__ == '__main__':
-    env = gym.make('CartPole-v1')
 
+    env = gym.make("BreakoutNoFrameskip-v4")  # creation de l'environnement
+    # test_preprocessing(0)  # TODO: à décommenter
+    # env = wrappers.Monitor(env, './video')
     # constantes pour l'agent DQN
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
@@ -271,33 +287,36 @@ if __name__ == '__main__':
         'exploration_rate': exploration_rate,
         'exploration_decay': exploration_decay,
         'exploration_min': exploration_min
-
     }
-    agent = DQNAgent(params)
+    agent = BreakoutAgent(params)  # creation de l'agent
+
     liste_rewards = []
+    done = False  # pour savoir quand on s'arrete (le baton est tombé ou il est sorti de l'environnement)
 
     for i in range(nb_episodes):
-        state = env.reset()
+        state = preprocessing(env.reset())
+        print(state)
         # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
-        state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
+        # state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
         steps = 1
         sum_reward = 0
         while True:
             action = agent.act(state, "greedy")  # choix d'une action (greedy: soit aléatoire soit via le réseau)
             next_state, reward, done, _ = env.step(action)  # on "exécute" l'action sur l'environnement
-            next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
+            # next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
             agent.remember(state, action, reward, next_state, done)
-            state = next_state
+            state = preprocessing(next_state)
             sum_reward += reward
             agent.experience_replay()
             if done:
                 print("epsiode", i, "- steps : ", steps, "- somme reward", sum_reward)
                 break
-            if steps % update_target_network == 0:
-                # on met à jour le target network tous les `update_target_network` pas
-                print("the target network is updating")
-                agent.update_target_network()
+            # if steps % update_target_network == 0:
+            #     # on met à jour le target network tous les `update_target_network` pas
+            #     print("the target network is updating")
+            #     agent.update_target_network()
             steps += 1
         liste_rewards.append(sum_reward)
-    evolution_rewards(liste_rewards)
-    print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
+    # print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
+
+    # gym.upload('./video', api_key='blah')

@@ -30,6 +30,13 @@ class Memory:
             batch = random.sample(self.memory, self.batch_size)
             return batch
 
+    def __len__(self):
+        """
+        Retourne le nombre d'élélemnts (non nuls) dans la mémoire
+        :return: le nombre d'éléments dans la mémoire
+        """
+        return sum(len(item) > 0 for item in self.memory)  # len(self.memory)
+
 
 class ExperienceReplayAgent:
     """

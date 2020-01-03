@@ -1,149 +1,332 @@
-import gym
+import math
 import random
+
+import cv2
+import gym
+import matplotlib.pyplot as plt
 import numpy
-from tensorflow import keras
+from gym import wrappers
 
 
-def to_grayscale(img):
-    return numpy.mean(img, axis=2).astype(numpy.uint8)
+## MEMO
+# action : 2 valeurs (droite / gauche)
+# environment : [position of cart, velocity of cart, angle of pole, rotation rate of pole]
+# state / next_state = tableau de 4 elements
+# action : 0 ou 1
+# reward : 1 si la baton n'est pas tombé
+# done : True ou False
+
+# frame = image de 210×160 pixels avec une palette de 128 couleurs
+from keras import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
 
 
-def downsample(img):
-    return img[::2, ::2]
-
-
-def preprocess(img):
-    return to_grayscale(downsample(img))
-
-
-def transform_reward(reward):
-    return numpy.sign(reward)
-
-
-def fit_batch(model, gamma, start_states, actions, rewards, next_states, is_terminal)
-    """Do one deep Q learning iteration.
-
-    Params:
-    - model: The DQN
-    - gamma: Discount factor (should be 0.99)
-    - start_states: numpy array of starting states
-    - actions: numpy array of one-hot encoded actions corresponding to the start states
-    - rewards: numpy array of rewards corresponding to the start states and actions
-    - next_states: numpy array of the resulting states corresponding to the start states and actions
-    - is_terminal: numpy boolean array of whether the resulting state is terminal
-
+class Memory:
     """
-    # First, predict the Q values of the next states. Note how we are passing ones as the mask.
-    next_Q_values = model.predict([next_states, numpy.ones(actions.shape)])
-    # The Q values of the terminal states is 0 by definition, so override them
-    next_Q_values[is_terminal] = 0
-    # The Q values of each start state is the reward + gamma * the max next state Q value
-    Q_values = rewards + gamma * numpy.max(next_Q_values, axis=1)
-    # Fit the keras model. Note how we are passing the actions as the mask and multiplying
-    # the targets by the actions.
-    model.fit(
-        [start_states, actions], actions * Q_values[:, None],
-        nb_epoch=1, batch_size=len(start_states), verbose=0
-    )
+    Classe représentant la mémoire de l'agent (utile pour l'expérience replay)
+    """
+    def __init__(self, max_size, batch_size):
+        """
+        Initialise la mémoire de l'agent
+        :param max_size: taille maximale de la mémoire (par défaut 100 000)
+        :param batch_size: taille du batch généré sur la mémoire de l'agent
+        """
+        self.max_size = max_size
+        self.memory = [[] for _ in range(self.max_size)]  # penser a initialiser pour ne pas avoir d'index out of range
+        self.position = 0
+        self.batch_size = batch_size
 
+    def add(self, state, action, reward, next_state, done):
+        """
+        Ajoute une expérience à la mémoire de l'agent
+        :param state: l'état courant de l'agent
+        :param action: l'action choisie par l'agent
+        :param reward: la récompense gagnée
+        :param next_state: l'état d'arrivée après exécution de l'action
+        :param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
+        """
+        # on ajoute l'experience et on incremente la position dans la memoire
+        self.memory[self.position] = [state, action, reward, next_state, done]
+        self.position = (self.position + 1) % self.max_size  # modulo la taille max pour ne pas depasser
 
-def atari_model(n_actions):
-    # We assume a theano backend here, so the "channels" are first.
-    ATARI_SHAPE = (4, 105, 80)
-
-    # With the functional API we need to define the inputs.
-    frames_input = keras.layers.Input(ATARI_SHAPE, name='frames')
-    actions_input = keras.layers.Input((n_actions,), name='mask')
-
-    # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
-    normalized = keras.layers.Lambda(lambda x: x / 255.0)(frames_input)
-
-    # "The first hidden layer convolves 16 8×8 filters with stride 4 with the input image and applies a rectifier nonlinearity."
-    conv_1 = keras.layers.convolutional.Convolution2D(
-        16, 8, 8, subsample=(4, 4), activation='relu'
-    )(normalized)
-    # "The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity."
-    conv_2 = keras.layers.convolutional.Convolution2D(
-        32, 4, 4, subsample=(2, 2), activation='relu'
-    )(conv_1)
-    # Flattening the second convolutional layer.
-    conv_flattened = keras.layers.core.Flatten()(conv_2)
-    # "The final hidden layer is fully-connected and consists of 256 rectifier units."
-    hidden = keras.layers.Dense(256, activation='relu')(conv_flattened)
-    # "The output layer is a fully-connected linear layer with a single output for each valid action."
-    output = keras.layers.Dense(n_actions)(hidden)
-    # Finally, we multiply the output by the mask!
-    filtered_output = keras.layers.merge([output, actions_input], mode='mul')
-
-    self.model = keras.models.Model(input=[frames_input, actions_input], output=filtered_output)
-    optimizer = optimizer = keras.optimizers.RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-    self.model.compile(optimizer, loss='mse')
-
-
-class RingBuf:
-    def __init__(self, size):
-        # Pro-tip: when implementing a ring buffer, always allocate one extra element,
-        # this way, self.start == self.end always means the buffer is EMPTY, whereas
-        # if you allocate exactly the right number of elements, it could also mean
-        # the buffer is full. This greatly simplifies the rest of the code.
-        self.data = [None] * (size + 1)
-        self.start = 0
-        self.end = 0
-
-    def append(self, element):
-        self.data[self.end] = element
-        self.end = (self.end + 1) % len(self.data)
-        # end == start and yet we just added one element. This means the buffer has one
-        # too many element. Remove the first element by incrementing start.
-        if self.end == self.start:
-            self.start = (self.start + 1) % len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[(self.start + idx) % len(self.data)]
+    def sample(self):
+        """
+        Construit un batch aléatoire sur la mémoire de l'agent
+        :return: le batch
+        """
+        if (sum(len(item) > 0 for item in self.memory) < self.batch_size) or [] in self.memory:
+            # pas assez d'experiences pour construire le batch ou il existe des expériences vides
+            # comme sample prend des éléments aléatoirement, on vérifie qu'il n'y a pas d'éléméents vides (sinon unpack)
+            # TODO: mieux expliquer
+            return None
+        else:
+            # creation du batch aleatoire parmi les elements de la memoire
+            batch = random.sample(self.memory, self.batch_size)
+            return batch
 
     def __len__(self):
-        if self.end < self.start:
-            return self.end + len(self.data) - self.start
-        else:
-            return self.end - self.start
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
+        """
+        Retourne le nombre d'élélemnts (non nuls) dans la mémoire
+        :return: le nombre d'éléments dans la mémoire
+        """
+        return sum(len(item) > 0 for item in self.memory)  # len(self.memory)
 
 
-def q_iteration(env, model, state, iteration, memory):
-    # Choose epsilon based on the iteration
-    epsilon = get_epsilon_for_iteration(iteration)
+class BreakoutAgent:
+    """
+    Classe représentant l'agent du Breakout et son réseau
+    """
+    def __init__(self, params):
+        """
+        Initialise le réseau et l'agent
+        :param params: le dictionnaire contenant les paramètres du réseau et de l'agent
+        """
+        self.state_size = params['state_size']  # taille de l'entrée du réseau
+        self.action_size = params['action_size']  # taille de sortie du réseau
 
-    # Choose the action
-    if random.random() < epsilon:
-        action = env.action_space.sample()
-    else:
-        action = choose_best_action(model, state)
+        self.memory = Memory(params['memory_size'], params['batch_size'])  # deque(maxlen=100000) -- mémoire pour l'expérience replay
 
-    # Play one game iteration (note: according to the next paper, you should actually play 4 times here)
-    new_frame, reward, is_done, _ = env.step(action)
-    memory.add(state, action, new_frame, reward, is_done)
+        self.gamma = params['gamma']
+        self.learning_rate = params['learning_rate']
+        self.exploration_rate = params['exploration_rate']  # greedy
+        self.exploration_decay = params['exploration_decay']
+        self.exploration_min = params['exploration_min']
 
-    # Sample and fit
-    batch = memory.sample_batch(32)
-    fit_batch(model, batch)
+        # model "de base"
+        # self.model = nn.Sequential(
+        #     nn.Linear(self.observation_space.shape[0], 30),
+        #     nn.ReLU(),
+        #     nn.Linear(30, 30),
+        #     nn.ReLU(),
+        #     nn.Linear(30, self.action_space.n)
+        # )
+        self.model = Sequential()
+        self.model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
+        self.model.add(Dense(24, activation='relu'))
+        self.model.add(Dense(self.action_size, activation='linear'))
+        self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        # self.model = Sequential()
+        # self.model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
+        # self.model.add(Dense(48, activation='tanh'))
+        # self.model.add(Dense(self.action_size, activation='linear'))
+        # self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
+        #
+        # self.target_model = Sequential()
+        # self.target_model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
+        # self.target_model.add(Dense(48, activation='tanh'))
+        # self.target_model.add(Dense(self.action_size, activation='linear'))
+        # self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
+
+        # self.model = Sequential(nn.Linear(self.state_size, 30),
+        #               nn.ReLU(),
+        #               nn.Linear(30, 30),
+        #               nn.ReLU(),
+        #               nn.Linear(30, self.action_size))
+        # target model pour la stabilité
+        self.target_model = Sequential()
+        self.target_model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
+        self.target_model.add(Dense(24, activation='relu'))
+        self.target_model.add(Dense(self.action_size, activation='linear'))
+        self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+
+    def act(self, state, policy="greedy"):
+        """
+        Choisit une action pour l'état donné
+        :param state: l'état courant de l'agent
+        :param policy: la politique utilisée par l'agent
+        :return: l'action choisie par la politique
+        """
+
+        if numpy.random.random() <= self.exploration_rate:
+            return env.action_space.sample()
+        return numpy.argmax(self.model.predict(state))
+        # argmax retourne l'indice de la meilleure valeur
+        # if policy == "greedy":
+        #     if numpy.random.rand() <= self.exploration_rate:
+        #         # on retourne une action aléatoire (exploration)
+        #         return random.randrange(self.action_size)
+        #     else:
+        #         # on retourne la meilleure action prédite par le réseau (intensification)
+        #         q_values = self.model.predict(state)
+        #         # print(q_values)
+        #         return numpy.argmax(q_values)
+        # elif policy == "boltzmann":
+        #     if numpy.random.rand() <= self.exploration_rate:
+        #         # on retourne une action aléatoire (exploration)
+        #         return random.randrange(self.action_size)
+        #     else:
+        #         tau = 0.8
+        #         q_values = self.model.predict(state)
+        #         sum_q_values = 0
+        #         boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+        #         for i in range(len(q_values[0])):
+        #             # calcul de la somme des exp(q_val / tau)
+        #             sum_q_values += numpy.exp(q_values[0][i] / tau)
+        #         for i in range(len(q_values[0])):
+        #             # calcul de la probabilité de Boltzmann pour chaque action
+        #             current_q_value = q_values[0][i]
+        #             # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
+        #             boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+        #         # on retourne l'action qui a la plus grande probabilité
+        #         return numpy.argmax(boltzmann_probabilities)
+        # else:
+        #     # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
+        #     return random.randrange(self.action_size)
+
+    def remember(self, state, action, reward, next_state, done):
+        """
+        Ajoute une expérience à la mémoire de l'agent
+        :param state: l'état courant de l'agent
+        :param action: l'action choisie par l'agent
+        :param reward: la récompense gagnée
+        :param next_state: l'état d'arrivée après exécution de l'action
+        :param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
+        """""
+        self.memory.add(state, action, reward, next_state, done)
+        # self.memory.append((state, action, reward, next_state, done))
+
+    def experience_replay(self):
+        """
+        Calcule les prédictions, met à jour le modèle et entraine le réseau
+        La rétropropagation est faite par la fonction fit
+        """
+        # mini_batch = self.memory.sample()
+        # x_batch, y_batch = [], []
+        # # on a assez d'experiences en memoire pour avoir un minibatch
+        # if mini_batch is not None:
+        #     for state, action, reward, next_state, done in mini_batch:
+        #         losses = []
+        #         if not done:
+        #             # TODO: ici on utilise le target model pour la prédiction du prochain état pour plus de stabilité dans le réseau (évite de modifier "en double" vu que Q et Q^ sont modifiées toutes les deux)
+        #             # q_value = (reward + self.gamma * numpy.amax(self.target_model.predict(next_state)[0]))
+        #             q_value = (reward + self.gamma * numpy.amax(self.model.predict(next_state)[0]))
+        #         else:
+        #             q_value = reward
+        #         q_values = self.model.predict(state)  # predictions pour un l'état donné en paramètre
+        #         q_values[0][action] = q_value  # mise a jour de la Q-valeur de l'action (pour l'état)
+        #         x_batch.append(state[0])
+        #         y_batch.append(q_values[0])
+        #         # TODO: utiliser la backpropagation
+        #         # TODO: obligatoire pour que le réseau apprenne
+        #         # TODO : lequel prédit sur target lequel sur model ?
+        #         # q_value_previous = self.target_model.predict(state)[0]
+        #         # erreur = carré de la différence entre l'état courant et l'état futur
+        #         # loss = math.pow((q_value_previous - q_value), 2)
+        #         # losses.append(loss)
+        #         # loss.
+        #
+        #
+        #         # entrainement sur le mini batch
+        #         # if done:
+        #         #     self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
+        #         # else:
+        #     self.model.fit(numpy.array(x_batch), numpy.array(y_batch), verbose=0, batch_size=self.memory.batch_size)
+        #
+        #     if self.exploration_rate > self.exploration_min:
+        #         self.exploration_rate *= self.exploration_decay
+        x_batch, y_batch = [], []
+        minibatch = self.memory.sample()
+        if minibatch is not None:
+            for state, action, reward, next_state, done in minibatch:
+                y_target = self.model.predict(state)
+                if done:
+                    y_target[0][action] = reward
+                else:
+                    y_target[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
+                x_batch.append(state[0])
+                y_batch.append(y_target[0])
+
+            self.model.fit(numpy.array(x_batch), numpy.array(y_batch), batch_size=len(x_batch), verbose=0)
+            if self.exploration_rate > self.exploration_min:
+                self.exploration_rate *= self.exploration_decay
+
+    def update_target_network(self):
+        """
+        Met à jour le target model à partir du model
+        """
+        self.target_model.set_weights(self.model.get_weights())
+
+
+# 3 - question 1
+def preprocessing(observation):
+    """
+    Preprocessing des images (state) : réduction de la dimension (210*160*3 => 84*84*1) + noir et blanc
+    """
+    observation = cv2.cvtColor(cv2.resize(observation, (84, 110)), cv2.COLOR_BGR2GRAY)
+    observation = observation[26:110, :]
+    ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
+    return numpy.reshape(observation, (84, 84, 1))
+
+
+def test_preprocessing(action):
+    state, reward, done, _ = env.step(action)
+    print("Before processing: " + str(numpy.array(state).shape))
+    state = preprocessing(state)
+    print("After processing: " + str(numpy.array(state).shape))
+
+
 if __name__ == '__main__':
-    env = gym.make('BreakoutNoFrameskip-v4')
-    print(env.observation_space)
-    print(env.action_space) # doing nothing, “asking for a ball” at the beginning of the game by pressing the button and going either left or right
-    frame = env.reset()
-    env.render()
 
-    is_done = False
-    while not is_done:
-        # Perform a random action, returns the new frame, reward and whether the game is over
-        frame, reward, is_done, _ = env.step(env.action_space.sample())
-        # Render
-        env.render()
-    # nb_episodes = 100
-    # for i in range(nb_episodes):
-    #     state = env.reset()
-    #     while True:
-    #         action = random.sample(env.action_space)
+    env = gym.make("BreakoutNoFrameskip-v4")  # creation de l'environnement
+    # test_preprocessing(0)  # TODO: à décommenter
+    # env = wrappers.Monitor(env, './video')
+    # constantes pour l'agent DQN
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+    memory_size = 100000
+    batch_size = 20  # 64
+    gamma = 0.95  # 0.99
+    learning_rate = 0.001
+    exploration_rate = 1
+    exploration_decay = 0.995
+    exploration_min = 0.01
+
+    # constantes pour l'exécution
+    nb_episodes = 200
+    update_target_network = 100
+
+    # creation de l'agent avec ses paramètres
+    params = {
+        'state_size': state_size,
+        'action_size': action_size,
+        'memory_size': memory_size,
+        'batch_size': batch_size,
+        'gamma': gamma,
+        'learning_rate': learning_rate,
+        'exploration_rate': exploration_rate,
+        'exploration_decay': exploration_decay,
+        'exploration_min': exploration_min
+
+    }
+    agent = BreakoutAgent(params)  # creation de l'agent
+
+    liste_rewards = []
+    done = False  # pour savoir quand on s'arrete (le baton est tombé ou il est sorti de l'environnement)
+
+    for i in range(nb_episodes):
+        state = env.reset()
+        # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
+        # state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
+        steps = 1
+        sum_reward = 0
+        while True:
+            action = agent.act(state, "greedy")  # choix d'une action (greedy: soit aléatoire soit via le réseau)
+            next_state, reward, done, _ = env.step(action)  # on "exécute" l'action sur l'environnement
+            # next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
+            agent.remember(state, action, reward, next_state, done)
+            state = next_state
+            sum_reward += reward
+            agent.experience_replay()
+            if done:
+                print("epsiode", i, "- steps : ", steps, "- somme reward", sum_reward)
+                break
+            # if steps % update_target_network == 0:
+            #     # on met à jour le target network tous les `update_target_network` pas
+            #     print("the target network is updating")
+            #     agent.update_target_network()
+            steps += 1
+        liste_rewards.append(sum_reward)
+    print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
+
+    # gym.upload('./video', api_key='blah')

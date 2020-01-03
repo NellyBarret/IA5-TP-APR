@@ -64,7 +64,7 @@ def cartpole():
     action_space = env.action_space.n
     dqn_solver = DQNSolver(observation_space, action_space)
     run = 0
-    while True:
+    for i in range(20):
         run += 1
         state = env.reset()
         state = np.reshape(state, [1, observation_space])
@@ -74,7 +74,7 @@ def cartpole():
             #env.render()
             action = dqn_solver.act(state)
             state_next, reward, terminal, info = env.step(action)
-            reward = reward if not terminal else -reward
+            # reward = reward if not terminal else -reward
             # print(state_next)
             # [ 0.04742195 -0.24078796  0.00157168  0.32796451] => [[ 0.04742195 -0.24078796  0.00157168  0.32796451]]
             state_next = np.reshape(state_next, [1, observation_space])

@@ -84,19 +84,44 @@ class DQNAgent:
         self.target_model.add(Dense(self.action_size, activation='linear'))
         self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
 
-    def act(self, state):
+    def act(self, state, policy="greedy"):
         """
         Choisit une action pour l'état donné
         @param state: l'état courant de l'agent
+        @param policy: la politique utilisée par l'agent
         """
-        if numpy.random.rand() <= self.exploration_rate:
-            # on retourne une action aléatoire (exploration)
-            return random.randrange(self.action_size)
+        # argmax retourne l'indice de la maeilleure valeur
+        if policy == "greedy":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return random.randrange(self.action_size)
+            else:
+                # on retourne la meilleure action prédite par le réseau (intensification)
+                q_values = self.model.predict(state)
+                # print(q_values)
+                return numpy.argmax(q_values[0])
+        elif policy == "boltzmann":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return random.randrange(self.action_size)
+            else:
+                tau = 0.8
+                q_values = self.model.predict(state)
+                sum_q_values = 0
+                boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+                for i in range(len(q_values[0])):
+                    # calcul de la somme des exp(q_val / tau)
+                    sum_q_values += numpy.exp(q_values[0][i] / tau)
+                for i in range(len(q_values[0])):
+                    # calcul de la probabilité de Boltzmann pour chaque action
+                    current_q_value = q_values[0][i]
+                    # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
+                    boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+                # on retourne l'action qui a la plus grande probabilité
+                return numpy.argmax(boltzmann_probabilities)
         else:
-            # on retourne la meilleure action prédite par le réseau (intensification)
-            q_values = self.model.predict(state)
-            # print(q_values)
-            return numpy.argmax(q_values[0])
+            # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
+            return random.randrange(self.action_size)
 
     def remember(self, state, action, reward, next_state, done):
         """
@@ -111,6 +136,7 @@ class DQNAgent:
 
     def experience_replay(self, done):
         """
+        Calcule les prédictions, met à jour le modèle et entraine le réseau
         @param back_propagation: valeur de la rétropropagation (à donner à la fonction fit)
         """
         mini_batch = self.memory.sample()
@@ -127,16 +153,16 @@ class DQNAgent:
                 q_values[0][action] = q_value  # mise a jour de la Q-valeur de l'action (poue l'état)
                 # entrainement sur le mini batch
                 if done:
-                    self.model.fit(state, q_values, verbose=0)
+                    self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
                 else:
-                    self.model.fit(state, q_values, verbose=0)
+                    self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
                 # TODO: utiliser la backpropagation
             self.exploration_rate *= self.exploration_decay
             self.exploration_rate = max(self.exploration_min, self.exploration_rate)
 
     def update_target_network(self):
         """
-        Mise à jour du target model à partir du model
+        Met à jour le target model à partir du model
         """
         self.target_model.set_weights(self.model.get_weights())
 
@@ -147,17 +173,17 @@ if __name__ == '__main__':
     # constantes pour l'agent DQN
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
-    memory_size = 10
-    batch_size = 3
-    gamma = 0.95
+    memory_size = 10 # 100000
+    batch_size = 3 # 64
+    gamma = 0.95  # 0.99
     learning_rate = 0.001
     exploration_rate = 1
     exploration_decay = 0.995
     exploration_min = 0.01
 
     # constantes pour l'exécution
-    nb_episodes = 20
-    update_target_network = 20
+    nb_episodes = 200
+    update_target_network = 100
 
     # creation de l'agent avec ses paramètres
     params = {
@@ -181,7 +207,7 @@ if __name__ == '__main__':
         steps = 1
         sum_reward = 0
         while True:
-            action = agent.act(state)  # choix d'une action (greedy: soit aléatoire soit via le réseau)
+            action = agent.act(state, "boltzmann")  # choix d'une action (greedy: soit aléatoire soit via le réseau)
             next_state, reward, done, _ = env.step(action)  # on "exécute" l'action sur l'environnement
             next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
             agent.remember(state, action, reward, next_state, done)

@@ -8,6 +8,12 @@ verify_ssl = true
 [packages]
 matplotlib = "*"
 torch = "*"
+playground = "*"
+pandas = "*"
+ipython = "*"
+pil = "*"
+torchvision = "*"
+keras = "*"
 
 [requires]
 python_version = "3.7"

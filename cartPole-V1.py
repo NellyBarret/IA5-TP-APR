@@ -97,6 +97,7 @@ env = gym.make("CartPole-v1")
 observation = env.reset()
 
 
+# 2.1 - question 1
 def cartpole_random(episode_count=100):
     list_reward = []
     list_iteration = []

@@ -1,3 +1,5 @@
+import time
+
 import gym
 import numpy
 from keras import Sequential
@@ -235,7 +237,7 @@ if __name__ == '__main__':
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
     memory_size = 100000
-    batch_size = 64  # 64
+    batch_size = 16  # 64
     gamma = 0.99  # 0.99  # importance des récompenses à l'infini
     learning_rate = 0.001  # taux d'apprentissage de l'erreur entre la cible et la prédiction
     exploration_rate = 1  # pour savoir si on prend une action random ou la meilleure action
@@ -263,6 +265,8 @@ if __name__ == '__main__':
     agent = DQNAgent(params)
     liste_rewards = []  # liste des récompenses obtenues pour chaque épisode, permet de tracer le plot
     global_counter = 0
+
+    start_time = time.time()
     for i in range(nb_episodes):
         state = env.reset()
         # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
@@ -292,3 +296,4 @@ if __name__ == '__main__':
             agent.model.save_weights("./cartpole_dqn.h5")
     evolution_rewards(liste_rewards)
     print("Meilleure récompense obtenue", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
+    print("Temps total:", (time.time() - start_time))

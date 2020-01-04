@@ -2,7 +2,7 @@ import random
 import gym
 
 # MEMO
-# action_sample : espace d'actions : 2 valuers (droite / gauche)
+# action_sample : espace d'actions : 2 valeurs (droite / gauche)
 # state / next_state = tableau de 4 elements
 # action : 0 ou 1
 # reward : 1 si la baton n'est pas tombé

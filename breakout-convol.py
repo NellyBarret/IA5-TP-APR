@@ -269,6 +269,7 @@ def preprocessing(observation):
     """
     Preprocessing des images (state) : réduction de la dimension (210*160*3 => 84*84*1) + noir et blanc
     """
+    # TODO : utiliser un Wrapper
     observation = cv2.cvtColor(cv2.resize(observation, (84, 110)), cv2.COLOR_BGR2GRAY)
     observation = observation[26:110, :]
     ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)

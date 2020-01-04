@@ -18,9 +18,10 @@ from gym import wrappers
 
 # frame = image de 210×160 pixels avec une palette de 128 couleurs
 from keras import Sequential, Input, Model
-from keras.layers import Dense, Conv2D, Convolution2D, Lambda, Flatten, merge
+from keras.layers import Dense, Conv2D, Convolution2D, Lambda, Flatten, merge, Multiply
 from keras.losses import huber_loss
 from keras.optimizers import Adam, RMSprop
+import keras.backend as K
 
 
 class Memory:
@@ -94,30 +95,55 @@ class BreakoutAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
-        ATARI_SHAPE = (4, 105, 80)
-        frames_input = Input(ATARI_SHAPE, name='frames')
-        actions_input = Input((self.action_size,), name='filter')
-        # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
-        # TODO:
-        normalized = Lambda(lambda x: x / 255.0)(frames_input)
-        # The first hidden layer convolves 16 8×8 filters with stride 4 with the input image
-        # and applies a rectifier nonlinearity
-        conv_1 = Convolution2D(16, 8, 8, subsample=(4, 4), activation='relu')(normalized)
-        # The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity
-        conv_2 = Convolution2D(32, 4, 4, subsample=(2, 2), activation='relu')(conv_1)  # , data_format='channels_first'
-        conv_flattened = Flatten()(conv_2)
-        # The final hidden layer is fully-connected and consists of 256 rectifier units.
-        hidden = Dense(256, activation='relu')(conv_flattened)
-        output = Dense(self.action_size)(hidden)
-        filtered_output = merge([output, actions_input], mode='mul')
+        # ATARI_SHAPE = (4, 105, 80)
+        # frames_input = Input(ATARI_SHAPE, name='frames')
+        # actions_input = Input((self.action_size,), name='filter')
+        # # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
+        # # TODO: expliquer
+        # normalized = Lambda(lambda x: x / 255.0)(frames_input)
+        # # The first hidden layer convolves 16 8×8 filters with stride 4 with the input image
+        # # and applies a rectifier nonlinearity
+        # conv_1 = Convolution2D(16, 8, 8, subsample=(4, 4), activation='relu')(normalized)
+        # # The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity
+        # conv_2 = Convolution2D(32, 4, 4, subsample=(2, 2), activation='relu')(conv_1)  # , data_format='channels_first'
+        # conv_flattened = Flatten()(conv_2)
+        # # The final hidden layer is fully-connected and consists of 256 rectifier units.
+        # hidden = Dense(256, activation='relu')(conv_flattened)
+        # output = Dense(self.action_size)(hidden)
+        # filtered_output = merge([output, actions_input], mode='mul')
 
-        self.model = Model(input=[frames_input, actions_input], output=filtered_output)
-        optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        self.model.compile(optimizer, loss=huber_loss)
+        input_frame = Input(shape=(84, 84, 4))
+        action_one_hot = Input(shape=(self.action_size,))
+        conv1 = Conv2D(32, (8, 8), strides=(4, 4), activation='relu')(input_frame)
+        conv2 = Conv2D(64, (4, 4), strides=(2, 2), activation='relu')(conv1)
+        conv3 = Conv2D(64, (3, 3), strides=(1, 1), activation='relu')(conv2)
+        flat_feature = Flatten()(conv3)
+        hidden_feature = Dense(512)(flat_feature)
 
-        self.target_model = Model(input=[frames_input, actions_input], output=filtered_output)
-        optimizer2 = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        self.target_model.compile(optimizer2, loss=huber_loss)
+        q_value_prediction = Dense(self.action_size)(hidden_feature)
+
+        # if self.dueling:
+        #     # Dueling Network
+        #     # Q = Value of state + (Value of Action - Mean of all action value)
+        #     hidden_feature_2 = Dense(512, activation='relu')(flat_feature)
+        #     state_value_prediction = Dense(1)(hidden_feature_2)
+        #     q_value_prediction = merge([q_value_prediction, state_value_prediction],
+        #                                mode=lambda x: x[0] - K.mean(x[0]) + x[1],
+        #                                output_shape=(self.num_actions,))
+
+        select_q_value_of_action = Multiply()([q_value_prediction, action_one_hot])
+        target_q_value = Lambda(lambda x: K.sum(x, axis=-1, keepdims=True),)(select_q_value_of_action)
+        self.model = Model(inputs=[input_frame, action_one_hot], outputs=[q_value_prediction, target_q_value])
+
+        # TODO: faire avec 3 réseaux convolutionnels
+
+        # self.model = Model(input=[frames_input, actions_input], output=filtered_output)
+        # optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+        # self.model.compile(optimizer, loss=huber_loss)
+        #
+        # self.target_model = Model(input=[frames_input, actions_input], output=filtered_output)
+        # optimizer2 = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+        # self.target_model.compile(optimizer2, loss=huber_loss)
 
 
     def act(self, state, policy="greedy"):
@@ -295,7 +321,6 @@ if __name__ == '__main__':
 
     for i in range(nb_episodes):
         state = preprocessing(env.reset())
-        print(state)
         # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
         # state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
         steps = 1

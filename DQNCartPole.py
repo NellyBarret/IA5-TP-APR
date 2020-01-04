@@ -121,41 +121,39 @@ class DQNAgent:
         @param state: l'état courant de l'agent
         @param policy: la politique utilisée par l'agent
         """
-        if numpy.random.random() <= self.exploration_rate:
-            return env.action_space.sample()
-        return numpy.argmax(self.model.predict(state))
         # argmax retourne l'indice de la maeilleure valeur
-        # if policy == "greedy":
-        #     if numpy.random.rand() <= self.exploration_rate:
-        #         # on retourne une action aléatoire (exploration)
-        #         return random.randrange(self.action_size)
-        #     else:
-        #         # on retourne la meilleure action prédite par le réseau (intensification)
-        #         q_values = self.model.predict(state)
-        #         # print(q_values)
-        #         return numpy.argmax(q_values)
-        # elif policy == "boltzmann":
-        #     if numpy.random.rand() <= self.exploration_rate:
-        #         # on retourne une action aléatoire (exploration)
-        #         return random.randrange(self.action_size)
-        #     else:
-        #         tau = 0.8
-        #         q_values = self.model.predict(state)
-        #         sum_q_values = 0
-        #         boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
-        #         for i in range(len(q_values[0])):
-        #             # calcul de la somme des exp(q_val / tau)
-        #             sum_q_values += numpy.exp(q_values[0][i] / tau)
-        #         for i in range(len(q_values[0])):
-        #             # calcul de la probabilité de Boltzmann pour chaque action
-        #             current_q_value = q_values[0][i]
-        #             # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
-        #             boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
-        #         # on retourne l'action qui a la plus grande probabilité
-        #         return numpy.argmax(boltzmann_probabilities)
-        # else:
-        #     # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
-        #     return random.randrange(self.action_size)
+        if policy == "greedy":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return env.action_space.sample()
+            else:
+                # on retourne la meilleure action prédite par le réseau (intensification)
+                q_values = self.model.predict(state)
+                # print(q_values)
+                return numpy.argmax(q_values)
+        elif policy == "boltzmann":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return env.action_space.sample()
+            else:
+                tau = 0.8
+                q_values = self.model.predict(state)
+                sum_q_values = 0
+                boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+                for i in range(len(q_values[0])):
+                    # calcul de la somme des exp(q_val / tau)
+                    sum_q_values += numpy.exp(q_values[0][i] / tau)
+                for i in range(len(q_values[0])):
+                    # calcul de la probabilité de Boltzmann pour chaque action
+                    current_q_value = q_values[0][i]
+                    # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
+                    boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+                # on retourne l'action qui a la plus grande probabilité
+                return numpy.argmax(boltzmann_probabilities)
+        else:
+            # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
+            # return random.randrange(self.action_size)
+            return env.action_space.sample()
 
     def remember(self, state, action, reward, next_state, done):
         """
@@ -174,55 +172,23 @@ class DQNAgent:
         Calcule les prédictions, met à jour le modèle et entraine le réseau
         La rétropropagation est faite par la fonction fit
         """
-        # mini_batch = self.memory.sample()
-        # x_batch, y_batch = [], []
-        # # on a assez d'experiences en memoire pour avoir un minibatch
-        # if mini_batch is not None:
-        #     for state, action, reward, next_state, done in mini_batch:
-        #         losses = []
-        #         if not done:
-        #             # TODO: ici on utilise le target model pour la prédiction du prochain état pour plus de stabilité dans le réseau (évite de modifier "en double" vu que Q et Q^ sont modifiées toutes les deux)
-        #             # q_value = (reward + self.gamma * numpy.amax(self.target_model.predict(next_state)[0]))
-        #             q_value = (reward + self.gamma * numpy.amax(self.model.predict(next_state)[0]))
-        #         else:
-        #             q_value = reward
-        #         q_values = self.model.predict(state)  # predictions pour un l'état donné en paramètre
-        #         q_values[0][action] = q_value  # mise a jour de la Q-valeur de l'action (pour l'état)
-        #         x_batch.append(state[0])
-        #         y_batch.append(q_values[0])
-        #         # TODO: utiliser la backpropagation
-        #         # TODO: obligatoire pour que le réseau apprenne
-        #         # TODO : lequel prédit sur target lequel sur model ?
-        #         # q_value_previous = self.target_model.predict(state)[0]
-        #         # erreur = carré de la différence entre l'état courant et l'état futur
-        #         # loss = math.pow((q_value_previous - q_value), 2)
-        #         # losses.append(loss)
-        #         # loss.
-        #
-        #
-        #         # entrainement sur le mini batch
-        #         # if done:
-        #         #     self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
-        #         # else:
-        #     self.model.fit(numpy.array(x_batch), numpy.array(y_batch), verbose=0, batch_size=self.memory.batch_size)
-        #
-        #     if self.exploration_rate > self.exploration_min:
-        #         self.exploration_rate *= self.exploration_decay
-        x_batch, y_batch = [], []
+        states, q_val = [], []
         minibatch = self.memory.sample()
         if minibatch is not None:
             for state, action, reward, next_state, done in minibatch:
-                y_target = self.model.predict(state)
+                # prédictions des q-valeurs pour toutes les actions de l'état
+                q_values = self.model.predict(state)
+                # mise a jour de la Q-valeur de l'action de l'état
                 if done:
-                    y_target[0][action] = reward
+                    q_values[0][action] = reward
                 else:
-                    y_target[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
-                x_batch.append(state[0])
-                y_batch.append(y_target[0])
-
-            self.model.fit(numpy.array(x_batch), numpy.array(y_batch), batch_size=len(x_batch), verbose=0)
-            if self.exploration_rate > self.exploration_min:
-                self.exploration_rate *= self.exploration_decay
+                    q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
+                states.append(state[0]) # contient tous les états
+                q_val.append(q_values[0])  # contient les prédictions des q_valeurs
+            # mise à jour du réseau sur le batch
+            self.model.fit(numpy.array(states), numpy.array(q_val), batch_size=len(states), verbose=0)
+            # if self.exploration_rate > self.exploration_min:
+            #     self.exploration_rate *= self.exploration_decay
 
     def update_target_network(self):
         """

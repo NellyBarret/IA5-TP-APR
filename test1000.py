@@ -72,8 +72,8 @@ class DQNAgent:
 
         # model "de base"
         self.model = Sequential()
-        self.model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.model.add(Dense(24, activation='relu'))
+        self.model.add(Dense(30, input_shape=(self.state_size,), activation='relu'))
+        self.model.add(Dense(30, activation='relu'))
         self.model.add(Dense(self.action_size, activation='linear'))
         self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         # self.model = Sequential()
@@ -95,8 +95,8 @@ class DQNAgent:
         #               nn.Linear(30, self.action_size))
         # target model pour la stabilité
         self.target_model = Sequential()
-        self.target_model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.target_model.add(Dense(24, activation='relu'))
+        self.target_model.add(Dense(30, input_shape=(self.state_size,), activation='relu'))
+        self.target_model.add(Dense(30, activation='relu'))
         self.target_model.add(Dense(self.action_size, activation='linear'))
         self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
 
@@ -151,8 +151,8 @@ class DQNAgent:
         @param next_state: l'état d'arrivée après exécution de l'action
         @param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
         """
-        # self.memory.add(state, action, reward, next_state, done)
-        self.memory.append((state, action, reward, next_state, done))
+        self.memory.add(state, action, reward, next_state, done)
+        # self.memory.append(state, action, reward, next_state, done)
 
     def experience_replay(self):
         """

@@ -78,11 +78,11 @@ Chaque agent est implémenté dans un fichier qui lui est propre. Ainsi il suffi
 
 Les fichiers correspondants :
 \begin{itemize}
-	\item randomCartPole.py : implémente l'agent aléatoire
-	\item ExperienceReplayAgent.py : implémente la mémoire des agents
-	\item DQNCartPole.py : implémente la résolution du problème CartPole avec un DQN
-	\item breakout.py : implémente la résolution du problème Breakout avec un DQN
-	\item breakout-convol.py : implémente la résolution du problème Breakout avec un Breakout convolutionnel
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/randomCartPole.py}{randomCartPole.py} : implémente l'agent aléatoire
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/ExperienceReplayAgent.py}{ExperienceReplayAgent.py} : implémente la mémoire des agents
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/DQNCartPole.py}{DQNCartPole.py} : implémente la résolution du problème CartPole avec un DQN
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/breakout.py}{breakout.py} : implémente la résolution du problème Breakout avec un DQN
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/breakout-convol.py}{breakout-convol.py} : implémente la résolution du problème Breakout avec un Breakout convolutionnel
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,7 +158,7 @@ Après avoir choisi une action, l'agent l'exécute dans l'environnement via la f
 
 Pour évaluer notre agent aléatoire, nous avons réalisé un graphique traçant la somme des récompenses obtenues pour chaque épisode.
 
-\includegraphics[scale=0.5]{evolution_recompenses_random.png} 
+\includegraphics[scale=0.5]{../performances/evolution_recompenses_random.png} 
 
 La courbe bleue représente la somme des récompenses obtenue pour chaque épisode. La courbe orange représente la moyenne des récompenses pour les \lstinline{nb_episodes} épisodes. Nous pouvons observer qu'il n'y a pas de tendance particulière. Cela semble cohérent avec le fait que l'agent n'a aucun moyen d'apprendre de ses erreurs (pas de mémoire ni de rétro-propagation) et qu'il ne choisisse pas les meilleures actions (politique aléatoire). 
 
@@ -480,7 +480,7 @@ Nous avons pu observer que l'agent apprend des comportements intéressants mais 
 
 Notre agent a réussi à atteindre une récompense par épisode de 500 au meilleur de sa performance. On peut remarquer aussi qu'il l'a fait avant la fin des 200 épisodes, ce qui permet de considérer que notre agent résoud le problème du CartPole. On remarque néamoins qu'après 175 épisodes, il y a une chute des récompenses. Cela peut s'expliquer par le fait que malgré le target network, l'apprentissage avec un DQN reste instable. On peut aussi noter que notre agent a eu trois pics de performances et que l'apprentissage est en hausse à chaque épisode.
 
-\includegraphics[scale=0.5]{evolution_recompenses_dqn_cartpole.png}
+\includegraphics[scale=0.5]{../performances/evolution_recompenses_dqn_cartpole.png}
 
 \section{Breakout Atari}
 
@@ -609,29 +609,29 @@ La légende est sous la forme :
 $$ < \text{taille de la couche cachée, fonction d'activation, utilisation du target network} >$$
 
 \begin{center}
-	\includegraphics[scale=0.3]{tarnetRelu24.png}
+	\includegraphics[scale=0.3]{../performances/tarnetRelu24.png}
 	\captionof{figure}{< 24, ReLu, oui >}
 \end{center}
 
 \begin{minipage}{.5\textwidth}
   \centering
-  \includegraphics[scale=0.3]{tarnetRelu30.png}
+  \includegraphics[scale=0.3]{../performances/tarnetRelu30.png}
   \captionof{figure}{< 30, ReLu, oui >}
 \end{minipage}%
 \begin{minipage}{.5\textwidth}
   \centering
-  \includegraphics[scale=0.3]{tarnetRelu1024.png}
+  \includegraphics[scale=0.3]{../performances/tarnetRelu1024.png}
   \captionof{figure}{< 1024, ReLu, oui >}
 \end{minipage}
 
 \begin{minipage}{.5\textwidth}
   \centering
-  \includegraphics[scale=0.3]{tarnetTanh24.png}
+  \includegraphics[scale=0.3]{../performances/tarnetTanh24.png}
   \captionof{figure}{< 24, Tanh, oui >}
 \end{minipage}%
 \begin{minipage}{.5\textwidth}
   \centering
-  \includegraphics[scale=0.3]{netRelu24.png}
+  \includegraphics[scale=0.3]{../performances/netRelu24.png}
   \captionof{figure}{< 24, ReLu, non >}
 \end{minipage}
 

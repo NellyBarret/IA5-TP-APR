@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=pdflatex 2019.10.14)  5 JAN 2020 22:18
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018) (preloaded format=pdflatex 2019.10.14)  5 JAN 2020 23:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -475,6 +475,11 @@ File: lstlang1.sty 2015/06/04 1.6 listings language file
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
 nput line 108.
 
+Overfull \hbox (2.67174pt too wide) in paragraph at lines 134--135
+\T1/cmr/m/n/10 Nous de-vons choi-sir le nombre d'épi-sodes sur le-quel l'agent 
+va s'en-traî-ner. Comme
+ []
+
 [3]
 <../performances/evolution_recompenses_random.png, id=218, 642.4pt x 481.8pt>
 File: ../performances/evolution_recompenses_random.png Graphic file (type png)
@@ -484,32 +489,32 @@ Package pdftex.def Info: ../performances/evolution_recompenses_random.png  used
 (pdftex.def)             Requested size: 321.19922pt x 240.8994pt.
  [4 <../performances/evolution_recompenses_random.png (PNG copy)>] [5]
 [6]
-Overfull \hbox (2.43881pt too wide) in paragraph at lines 285--285
+Overfull \hbox (2.43881pt too wide) in paragraph at lines 286--286
 []\T1/cmr/m/n/10 Expé| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 285--285
+Underfull \hbox (badness 10000) in paragraph at lines 286--286
 []\T1/cmr/m/n/10 Taille de la
  []
 
 
-Underfull \hbox (badness 2903) in paragraph at lines 285--285
+Underfull \hbox (badness 2903) in paragraph at lines 286--286
 []\T1/cmr/m/n/10 Utilisation du
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 285--285
+Underfull \hbox (badness 10000) in paragraph at lines 286--286
 []\T1/cmr/m/n/10 Meilleure
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 285--285
+Underfull \hbox (badness 10000) in paragraph at lines 286--286
 \T1/cmr/m/n/10 ré-com-pense
  []
 
 [7]
-Underfull \hbox (badness 10000) in paragraph at lines 357--358
+Underfull \hbox (badness 10000) in paragraph at lines 358--359
 
  []
 
@@ -520,119 +525,119 @@ File: ../performances/evolution_recompenses_dqn_cartpole.png Graphic file (type
  png)
 <use ../performances/evolution_recompenses_dqn_cartpole.png>
 Package pdftex.def Info: ../performances/evolution_recompenses_dqn_cartpole.png
-  used on input line 483.
+  used on input line 484.
 (pdftex.def)             Requested size: 321.19922pt x 240.8994pt.
  [12 <../performances/evolution_recompenses_dqn_cartpole.png (PNG copy)>] [13] 
 [14]
-Overfull \hbox (14.19513pt too wide) detected at line 609
+Overfull \hbox (14.19513pt too wide) detected at line 611
 \OML/cmm/m/it/10 < [] >
  []
 
-<../performances/tarnetRelu24.png, id=508, 642.4pt x 481.8pt>
+<../performances/tarnetRelu24.png, id=512, 642.4pt x 481.8pt>
 File: ../performances/tarnetRelu24.png Graphic file (type png)
 <use ../performances/tarnetRelu24.png>
 Package pdftex.def Info: ../performances/tarnetRelu24.png  used on input line 6
-12.
+14.
 (pdftex.def)             Requested size: 192.72148pt x 144.5411pt.
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 613.
+(caption)                particular \caption on input line 615.
 See the caption package documentation for explanation.
 
 [15]
-<../performances/tarnetRelu30.png, id=523, 642.4pt x 481.8pt>
+<../performances/tarnetRelu30.png, id=527, 642.4pt x 481.8pt>
 File: ../performances/tarnetRelu30.png Graphic file (type png)
 <use ../performances/tarnetRelu30.png>
 Package pdftex.def Info: ../performances/tarnetRelu30.png  used on input line 6
-18.
+20.
 (pdftex.def)             Requested size: 192.72148pt x 144.5411pt.
 
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 619.
+(caption)                particular \caption on input line 621.
 See the caption package documentation for explanation.
 
 
-Overfull \hbox (20.22148pt too wide) in paragraph at lines 618--619
+Overfull \hbox (20.22148pt too wide) in paragraph at lines 620--621
  [][] 
  []
 
-<../performances/tarnetRelu1024.png, id=524, 642.4pt x 481.8pt>
+<../performances/tarnetRelu1024.png, id=528, 642.4pt x 481.8pt>
 File: ../performances/tarnetRelu1024.png Graphic file (type png)
 <use ../performances/tarnetRelu1024.png>
 Package pdftex.def Info: ../performances/tarnetRelu1024.png  used on input line
- 623.
+ 625.
 (pdftex.def)             Requested size: 192.72148pt x 144.5411pt.
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 624.
+(caption)                particular \caption on input line 626.
 See the caption package documentation for explanation.
 
 
-Overfull \hbox (20.22148pt too wide) in paragraph at lines 623--624
+Overfull \hbox (20.22148pt too wide) in paragraph at lines 625--626
  [][] 
  []
 
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 616--626
+Overfull \hbox (15.0pt too wide) in paragraph at lines 618--628
 []$[]$$[]$ 
  []
 
-<../performances/tarnetTanh24.png, id=525, 642.4pt x 481.8pt>
+<../performances/tarnetTanh24.png, id=529, 642.4pt x 481.8pt>
 File: ../performances/tarnetTanh24.png Graphic file (type png)
 <use ../performances/tarnetTanh24.png>
 Package pdftex.def Info: ../performances/tarnetTanh24.png  used on input line 6
-29.
+31.
 (pdftex.def)             Requested size: 192.72148pt x 144.5411pt.
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 630.
+(caption)                particular \caption on input line 632.
 See the caption package documentation for explanation.
 
 
-Overfull \hbox (20.22148pt too wide) in paragraph at lines 629--630
+Overfull \hbox (20.22148pt too wide) in paragraph at lines 631--632
  [][] 
  []
 
-<../performances/netRelu24.png, id=526, 642.4pt x 481.8pt>
+<../performances/netRelu24.png, id=530, 642.4pt x 481.8pt>
 File: ../performances/netRelu24.png Graphic file (type png)
 <use ../performances/netRelu24.png>
-Package pdftex.def Info: ../performances/netRelu24.png  used on input line 634.
+Package pdftex.def Info: ../performances/netRelu24.png  used on input line 636.
 
 (pdftex.def)             Requested size: 192.72148pt x 144.5411pt.
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 635.
+(caption)                particular \caption on input line 637.
 See the caption package documentation for explanation.
 
 
-Overfull \hbox (20.22148pt too wide) in paragraph at lines 634--635
+Overfull \hbox (20.22148pt too wide) in paragraph at lines 636--637
  [][] 
  []
 
 
-Overfull \hbox (15.0pt too wide) in paragraph at lines 627--637
+Overfull \hbox (15.0pt too wide) in paragraph at lines 629--639
 []$[]$$[]$ 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 639.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 641.
 [16 <../performances/tarnetRelu24.png (PNG copy)> <../performances/tarnetRelu30
 .png (PNG copy)> <../performances/tarnetRelu1024.png (PNG copy)> <../performanc
 es/tarnetTanh24.png (PNG copy)> <../performances/netRelu24.png (PNG copy)>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 639.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 641.
 
 (./compte-rendu.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 639.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 639.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 641.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 641.
 Package rerunfilecheck Info: File `compte-rendu.out' has not changed.
 (rerunfilecheck)             Checksum: 53060970931D1BC09CF9FAE842E6A194;2254.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 639.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 641.
  ) 
 Here is how much of TeX's memory you used:
- 11346 strings out of 492649
- 163010 string characters out of 6129621
- 400814 words of memory out of 5000000
- 14792 multiletter control sequences out of 15000+600000
+ 11342 strings out of 492649
+ 162952 string characters out of 6129621
+ 398814 words of memory out of 5000000
+ 14788 multiletter control sequences out of 15000+600000
  19657 words of font info for 54 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  36i,11n,42p,804b,1955s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -659,10 +664,10 @@ st/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2018/texmf-dist
 onts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2018/texmf-dist/fon
 ts/type1/public/cm-super/sfti1000.pfb></usr/local/texlive/2018/texmf-dist/fonts
 /type1/public/cm-super/sftt0800.pfb>
-Output written on compte-rendu.pdf (16 pages, 768500 bytes).
+Output written on compte-rendu.pdf (16 pages, 768985 bytes).
 PDF statistics:
- 674 PDF objects out of 1000 (max. 8388607)
- 620 compressed objects within 7 object streams
+ 678 PDF objects out of 1000 (max. 8388607)
+ 624 compressed objects within 7 object streams
  303 named destinations out of 1000 (max. 500000)
  276 words of extra memory for PDF output out of 10000 (max. 10000000)
 

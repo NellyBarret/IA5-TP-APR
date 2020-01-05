@@ -76,20 +76,20 @@ La suite de cette section décrit les préliminaires du fonctionnement des agent
 
 Chaque agent est implémenté dans un fichier qui lui est propre. Ainsi il suffit de lancer l'exécution du fichier voulu dans un IDE (e.g. Pycharm). La fonction \lstinline{main} de chaque fichier permet de créer l'environnement et l'agent ainsi que de faire apprendre l'agent sur l'environnement.
 
-Les fichiers correspondants :
+Les fichiers se trouvent dans le dossier \lstinline{sources} :
 \begin{itemize}
-	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/randomCartPole.py}{randomCartPole.py} : implémente l'agent aléatoire
-	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/ExperienceReplayAgent.py}{ExperienceReplayAgent.py} : implémente la mémoire des agents
-	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/DQNCartPole.py}{DQNCartPole.py} : implémente la résolution du problème CartPole avec un DQN
-	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/breakout.py}{breakout.py} : implémente la résolution du problème Breakout avec un DQN
-	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/nelly/breakout-convol.py}{breakout-convol.py} : implémente la résolution du problème Breakout avec un DQN convolutionnel
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/randomCartPole.py}{randomCartPole.py} : implémente l'agent aléatoire
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/ExperienceReplayAgent.py}{ExperienceReplayAgent.py} : implémente la mémoire des agents
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/DQNCartPole.py}{DQNCartPole.py} : implémente la résolution du problème CartPole avec un DQN
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/breakout.py}{breakout.py} : implémente la résolution du problème Breakout avec un DQN
+	\item \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/breakout-convol.py}{breakout-convol.py} : implémente la résolution du problème Breakout avec un DQN convolutionnel
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Agent aléatoire sur Cartpole}
 
-Fichier correspondant : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/randomCartPole.py}{randomCartpole.py}
+Fichier correspondant : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/randomCartPole.py}{randomCartpole.py}
 
 \subsection{Définitions et fonctionnalités}
 \subsubsection{Définition de l'environnement}
@@ -131,12 +131,12 @@ Le code ci-dessus montre l'instanciation du pseudo-code de l'entraînement d'un 
 \begin{lstlisting}[language=Python]
 # (1)
 \end{lstlisting}
-Nous devons choisir le nombre d'épisode sur lequel l'agent va s'entraîner. Comme l'agent a une politique aléatoire, le nombre d'épisode n'est pas un facteur influant les performances de l'agent puisque celui-ci exécute toujours des actions choisies aléatoirement. Nous prendrons comme paramètre 1000, ce qui permet de vérifier que l'agent interagisse correctement avec l'environnement sans pour autant que cela n'augmente de manière significative le temps d'exécution.
+Nous devons choisir le nombre d'épisodes sur lequel l'agent va s'entraîner. Comme l'agent a une politique aléatoire, le nombre d'épisodes n'est pas un facteur influant les performances de l'agent puisque celui-ci exécute toujours des actions choisies aléatoirement. Nous prendrons comme paramètre 1000, ce qui permet de vérifier que l'agent interagisse correctement avec l'environnement sans pour autant que cela n'augmente de manière significative le temps d'exécution.
 
 \begin{lstlisting}[language=Python]
 # (2)
 \end{lstlisting}
-Cette partie traite de l'évolution de la somme des récompenses perçues par l'agent. Pour chaque épisode nous ajoutons la récompense obtenue pour l'action choisie ce qui permet d'avoir une récompense \og globale \fg{}  par épisode. La fonction \lstinline{evolution_rewards} permet de tracer la courbe correspondant à ces récompenses par épisode. Nous avons aussi récupéré la meilleure somme de récompense obtenue ainsi que le numéro de l'épisode où elle a été obtenue (ligne 16).
+Cette partie traite de l'évolution de la somme des récompenses perçues par l'agent. Pour chaque épisode nous ajoutons la récompense obtenue pour l'action choisie ce qui permet d'avoir une récompense \og globale \fg{}  par épisode. La fonction \lstinline{evolution_rewards} permet de tracer la courbe correspondant à ces récompenses par épisode. Nous avons aussi récupéré la meilleure somme de récompenses obtenue ainsi que le numéro de l'épisode où elle a été obtenue (ligne 16).
 
 \begin{lstlisting}[language=Python]
 # (3)
@@ -156,7 +156,7 @@ Après avoir choisi une action, l'agent l'exécute dans l'environnement via la f
 \subsection{Analyse de performances}
 
 
-Pour évaluer notre agent aléatoire, nous avons réalisé un graphique traçant la somme des récompenses obtenues pour chaque épisode.
+Pour évaluer notre agent aléatoire, nous avons réalisé un graphique traçant la somme des récompenses obtenues pour chaque épisode grâce à notre fonction \lstinline{evolution_rewards}.
 
 \includegraphics[scale=0.5]{../performances/evolution_recompenses_random.png} 
 
@@ -164,7 +164,7 @@ La courbe bleue représente la somme des récompenses obtenue pour chaque épiso
 
 \subsection{Experience replay}
 
-Fichier correspondant : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/ExperienceReplayAgent.py}{ExperienceReplayAgent.py}
+Fichier correspondant : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/ExperienceReplayAgent.py}{ExperienceReplayAgent.py}
 
 Cet agent choisit aléatoirement ses actions et implémente une mémoire ce qui lui permettra par la suite d'apprendre par rapport à ses expériences passées.
 
@@ -262,6 +262,7 @@ Enfin, nous devons modifier quelque peu le programme principal afin que l'agent 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Deep Q-learning sur CartPole}
+Fichiers correspondants : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/DQNCartPole.py}{DQNCartpole.py}
 
 Dans la section précédente nous avons défini le problème du CartPole ainsi qu'un agent basique qui choisit aléatoirement ses actions. Nous lui avons ensuite ajouté  une mémoire en vu qu'il puisse apprendre de ses expériences passées. Nous allons maintenant lui faire apprendre de ses expériences en lui implémentant un algorithme d'apprentissage profond de type Q-learning.
 
@@ -390,12 +391,12 @@ global_counter = 0
 Nous avons plusieurs paramètres à prendre en compte et à ajuster à la résolution du problème de CartPole. Ces paramètres sont les suivants : 
 \begin{itemize}
 	\item La taille de la mémoire (\lstinline{memory_size}) : si la mémoire est trop petite, les batchs construits auront beaucoup de ressemblance (du fait de la petite taille de l'espace de tirage) donc le réseau apprendra peu. Par défaut la taille de la mémoire est fixée à 100000.
-    \item La taille du batch (\lstinline{batchsize}) : c'est sur ce batch que le réseau va se mettre à jour et donc apprendre. Si le batch est trop petit, le réseau apprendra peu ; s'il est trop grand, le temps d'apprentissage sera considérable.
-    \item Le gamma qui définit l'importance des récompenses à l'infini. Plus ce paramètre est proche de 1, plus l'agent aura tendance à attendre une meilleure récompense dans les états futurs (il privilégie une plus grosse récompense lointaine). Inversement, plus ce paramètre est proche de 0 plus l'agent va privilégier les récompenses proches. Nous l'avons défini à 0.99 afin de prendre en compte les récompenses lointaines.
+    \item La taille du batch (\lstinline{batch_size}) : c'est sur ce batch que le réseau va se mettre à jour et donc apprendre. Si le batch est trop petit, le réseau apprendra peu ; s'il est trop grand, le temps d'apprentissage sera considérable.
+    \item Le gamma définit l'importance des récompenses à l'infini. Plus ce paramètre est proche de 1, plus l'agent aura tendance à attendre une meilleure récompense dans les états futurs (il privilégie une plus grosse récompense lointaine). Inversement, plus ce paramètre est proche de 0 plus l'agent va privilégier les récompenses proches. Nous l'avons défini à 0.99 afin de prendre en compte les récompenses lointaines.
     \item Le taux d'apprentissage (\lstinline{learning_rate}) : nous l'avons défini à 0.001, valeur communément acquise par la communauté scientifique. Ce taux permet de plus ou moins apprendre l'erreur (entre la prédiction que le réseau a fait et la valeur cible).
     \item Le taux d'exploration (\lstinline{exploration_rate}) est utilisé dans les stratégies $\epsilon$-greedy et Boltzmann. Ce taux permet de choisir si l'agent va faire une action aléatoire ou l'action qu'il prédit comme meilleure. Dans le premier cas, cela permet de diversifier l'apprentissage, i.e. d'explorer de nouveaux états. Dans le second, cela permet d'intensifier l'apprentissage, i.e. de rester dans des états proches pour augmenter la somme des récompenses. Ce taux débute à 1 puis est diminué par le facteur \lstinline{exploration_decay} (0.995) jusqu'à son minimum \lstinline{exploration_min} (0.01). Cela permet notamment de faire baisser le nombre d'explorations au fur et à mesure que l'agent apprend et devient meilleur.
-    \item Le nombre d'épisode est maintenant mis à 200 car le problème du CartPole est considéré comme résolu si un score de 195 a été atteint avant 200 épisodes.
-    \item Le target network est mis à jour toutes les 100 itérations (au global). Cela permet au réseau de se remettre à jour assez souvent pour apprendre mais de rester dans des temps d'apprentissage raisonnables.
+    \item Le nombre d'épisodes est maintenant mis à 200 car le problème du CartPole est considéré comme résolu si un score de 195 a été atteint avant 200 épisodes.
+    \item Le target network (voir section \ref{targetmodelDQN}) est mis à jour toutes les 100 itérations (au global). Cela permet au réseau de se remettre à jour assez souvent pour apprendre mais de rester dans des temps d'apprentissage raisonnables.
 \end{itemize}
 
 \begin{lstlisting}[language=Python, caption=Paramétrage de l'agent DQN]
@@ -422,7 +423,7 @@ if __name__ == '__main__':
 
 La fonction \lstinline{act(...)} définit maintenant deux politiques : $\epsilon$-greedy et Boltzmann (et aléatoire le cas échéant). La politique est donnée comme paramètre à la fonction \lstinline{act(...)} et peut prendre comme valeurs \lstinline{greedy} ou \lstinline{boltzmann}. Nous allons maintenant détailler chacune de ces deux politiques.
 
-La politique $\epsilon$-greedy permet soit d'explorer les états en renvoyant une action aléatoire soit d'intensifier l'apprentissage en renvoyant la meilleure action prédite par la réseau. En comparaison de la poitique greedy, elle a l'avantage d'explorer les possibilités en choisissant des actions aléatoires.
+La politique $\epsilon$-greedy permet soit d'explorer les états en renvoyant une action aléatoire soit d'intensifier l'apprentissage en renvoyant la meilleure action prédite par la réseau. En comparaison de la poitique greedy, elle a l'avantage d'explorer les possibilités en choisissant de temps en temps des actions aléatoires.
 \begin{lstlisting}[language=Python, caption=Politique e-greedy]
 if numpy.random.rand() < self.exploration_rate:
     return random.randrange(self.action_size)
@@ -435,7 +436,7 @@ La politique de Boltzmann permet de choisir une action $a_k$ selon la probabilit
 
  $$P(s, a_k) = \frac{e^{\frac{Q(s,a_k)}{\tau}}}{\sum_ie^{\frac{Q(s,a_i))}{\tau}}}$$
  
-Plus $\tau$ est grand, plus la politique aura tendance à être aléatoire puisque le quotient $\frac{Q(s,a_k)}{\tau}$ tendra vers 0 donc la quotient donnant la probabilité de Boltzmann donnera des probabilités assez proches. Avec des probabilités proches, cela revient à choisir une action aléatoirement puisqu'aucune ne se distingue des autres. Inversement, plus $\tau$ est petit, plus les écarts entre probabilités seront forts, ce qui permettra de choisir la meilleure action avec une grande probabilité.
+Plus $\tau$ est grand, plus la politique aura tendance à être aléatoire puisque le quotient $\frac{Q(s,a_k)}{\tau}$ tendra vers 0 donc le quotient donnant la probabilité de Boltzmann donnera des probabilités assez proches. Avec des probabilités proches, cela revient à choisir une action aléatoirement puisqu'aucune ne se distingue des autres. Inversement, plus $\tau$ est petit, plus les écarts entre probabilités seront forts, ce qui permettra de choisir la meilleure action avec une grande probabilité.
 
 \begin{lstlisting}[language=Python,caption=Politique de Boltzmann]          
 if numpy.random.rand() <= self.exploration_rate:
@@ -459,7 +460,7 @@ $$Q(s,s',a,a') = r(s,a) + \gamma * max_{a'}Qt(s', a')$$ où $Q$ est le réseau d
 
 L'idée de cette fonction est d'apprendre sur les expériences passées. Dans un premier temps, on construit le batch sur lequel on va apprendre. Ensuite, en le parcourant, on calcule les Q-valeurs de chaque action pour un état donné en appliquant la formule de Bellman. Quand l'épisode se termine, l'équation de Bellman se résume à la récompense puisqu'il n'existe pas de prochain état. La ligne 3 prédit les valeurs des différentes actions avec le modèle courant. Après avoir calculé la Q-valeur de l'action, on met à jour le réseau (ligne 8). Enfin, le réseau réajuste ses poids grâce à la fonction \lstinline{fit}. Après avoir parcouru tout le batch, on met à jour le taux d'exploration (voir section \ref{paramDQN}).
 
-\begin{lstlisting}[language=Python, caption=Expérience repaly de l'agent DQN]
+\begin{lstlisting}[language=Python, caption=Expérience replay de l'agent DQN]
 ## creation du batch dans la variable batch
 for state, action, reward, state_next, done in batch:
 	q_values = self.model.predict(state)
@@ -474,7 +475,7 @@ for state, action, reward, state_next, done in batch:
 
 \subsubsection{Target model} \label{targetmodelDQN}
 
-Nous avons pu observer que l'agent apprend des comportements intéressants mais qu'il n'était pas très stable. Dans cette optique, nous avons ajouté un second réseau (\lstinline{target_network}) dans le but de stabiliser le réseau. Ce réseau se base sur le même modèle que l'original. La mise à jour est une recopie des poids du réseau de base dans le target network (voir section \ref{paramDQN}).
+Nous avons pu observer que l'agent apprend des comportements intéressants mais qu'il n'était pas très stable. Dans cette optique, nous avons ajouté un second réseau (\lstinline{target_network}) dans le but de stabiliser le réseau. Ce réseau se base sur le même modèle que l'original. Sa mise à jour est une recopie des poids du réseau de base dans le target network (voir section \ref{paramDQN}).
 
 \subsection{Performances}
 
@@ -483,8 +484,9 @@ Notre agent a réussi à atteindre une récompense par épisode de 500 au meille
 \includegraphics[scale=0.5]{../performances/evolution_recompenses_dqn_cartpole.png}
 
 \section{Breakout Atari}
+Fichiers correspondants : \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/breakout.py}{breakout.py} et \href{https://github.com/NellyBarret/IA5-TP-APR/blob/master/sources/breakout-convol.py}{breakout-convol.py}
 
-Dans le problème du Breakout, le but est d'éliminer toutes les briques en les touchant avec une balle. Le balle rebo,ndit sur une plateforme et c'est cette plateforme qu'il faut drigier à droite et à gauche pour faire rebondir la balle et continuer à jouer. Un comportement intéressants serait de casser les briques d'un côté pour faire passer la balle derrière le mur de briques. 
+Dans le problème du Breakout, le but est d'éliminer toutes les briques en les touchant avec une balle. Le balle rebondit sur une plateforme et c'est cette plateforme qu'il faut diriger à droite et à gauche pour faire rebondir la balle et continuer à jouer. Un comportement intéressants serait de casser les briques d'un côté pour faire passer la balle derrière le mur de briques. 
 
 \subsection{Définition de l'environnement}
 
@@ -519,39 +521,39 @@ After processing: (84, 84, 1)
 \end{lstlisting}
 \subsubsection{Réseau convolutionnel}
 
-Pour notre agent apprenant à jouer au Breakout, nous avons remplacé le réseau entièrement connecté (avec \lstinline{Dense}) par une réseau convolutionnel. Nous avons choisi d'en mettre 3 car cela semble le meilleur paramètres en terme de performances. Chaque couche s'active avec la fonctin ReLu. Afin d'aplanir la dernière couche nous utilisons la fonction \lstinline{Flatten()}. Enfin, la dernière couche est de la taille du nombre d'actions. Nous utilisons encore la fonction \lstinline{mse} pour l'erreur.
+Pour notre agent apprenant à jouer au Breakout, nous avons remplacé le réseau entièrement connecté (avec \lstinline{Dense}) par une réseau convolutionnel. Nous avons choisi d'en mettre 3 car cela semble le meilleur paramètres en terme de performances. Chaque couche s'active avec la fonctin ReLu. Afin d'aplanir la dernière couche nous utilisons la fonction \lstinline{Flatten()}. Enfin, la dernière couche est de la taille du nombre d'actions. Nous utilisons à nouveau la fonction \lstinline{mse} pour l'erreur.
 
 \begin{lstlisting}[language=Python, caption=Réseau convolutionnel de l'agent Breakout]
 input_shape = (84, 84, 1)
-self.model = Sequential()
-self.model.add(Conv2D(32, 8, strides=(4, 4), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
-self.model.add(Conv2D(64, 4, strides=(2, 2), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
-self.model.add(Conv2D(64, 3, strides=(1, 1), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
-self.model.add(Flatten())
-self.model.add(Dense(512, activation="relu"))
-self.model.add(Dense((self.action_size,)))
-self.model.compile(loss="mse", optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), metrics=["accuracy"])
+model = Sequential()
+model.add(Conv2D(32, 8, strides=(4, 4), activation="relu", input_shape=input_shape))
+model.add(Conv2D(64, 4, strides=(2, 2), activation="relu", input_shape=input_shape))
+model.add(Conv2D(64, 3, strides=(1, 1), activation="relu", input_shape=input_shape))
+model.add(Flatten())
+model.add(Dense(512, activation="relu"))
+model.add(Dense((self.action_size,)))
+model.compile(loss="mse", optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), metrics=["accuracy"])
 \end{lstlisting}
 
 \subsubsection{Fonctions utilitaires}
 
-Nous avons défini des fonctions de manière à pouvoir sauvegarder le réseau avec ses paramètres ainsi que les poids de celui-ci dans des fichiers. Pour ce faire, nous récupérons les modèle au format JSON puis nous l'écrivons dans un fichier. Pour les poids, la fonction prédéfinie \lstinline{saveweights(...)} permet directement de les sauvegarder dans un fichier.
+Nous avons défini des fonctions de manière à pouvoir sauvegarder le réseau avec ses paramètres ainsi que les poids de celui-ci dans des fichiers. Pour ce faire, nous récupérons les modèle au format JSON puis nous l'écrivons dans un fichier. Pour les poids, la fonction prédéfinie \lstinline{save_weights(...)} permet directement de les sauvegarder dans un fichier.
 \begin{lstlisting}[language=Python, caption=Sauvegarde du réseau neuronal et de ses poids]
 def save_network_file():
     model_json = agent.model.to_json()
-    with open("modelDQNCartpole.json", "w") as json_file:
+    with open("modelDQNbreakout.json", "w") as json_file:
         json_file.write(model_json)
-    agent.model.save_weights("./weightsDQNCartpole.h5")
+    agent.model.save_weights("./weightsDQNbreakout.h5")
 \end{lstlisting}
 
-Afin de pouvoir réutiliser ce modèle ainsi que ces poids, nous avons créé la fonction ci-dessous qui charge les données sauvegardées dans la variable \lstinline{loaded_model}. Le modèle est d'abord chargé puis les poidssont ajouté au modèle avec la fonction \lstinline{load_weights}.
+Afin de pouvoir réutiliser ce modèle ainsi que ces poids, nous avons créé la fonction ci-dessous qui charge les données sauvegardées dans la variable \lstinline{loaded_model}. Le modèle est d'abord chargé puis les poids sont ajoutés au modèle avec la fonction \lstinline{load_weights}.
 \begin{lstlisting}[language=Python, caption=Chargement du réseau neuronal et de ses poids]
 def load_network_file():
-    json_file = open('modelDQNCartpole.json', 'r')
+    json_file = open('modelDQNbreakout.json', 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
-    loaded_model.load_weights("weightsDQNCartpole.h5")
+    loaded_model.load_weights("weightsDQNbreakout.h5")
     return loaded_model
 \end{lstlisting}
 
@@ -577,7 +579,7 @@ Nous avons aussi 3 variables importantes quant à l'exécution d'actions sur l'e
 \begin{itemize}
 	\item \lstinline{next_state} qui définit le \textbf{nouvel état} (après exécution de l'action sur l'environnement)
 	\item \lstinline{reward} qui représente la \textbf{récompense} gagnée par l'agent après exécution de l'action sur l'environnement
-	\item \lstinline{done} qui est un booléen indiquant si l'épisode courant est fini, e.g. le bâton est tombé
+	\item \lstinline{done} qui est un booléen indiquant si l'épisode courant est fini, e.g. si le bâton est tombé
 \end{itemize}
 
 Enfin, nous avons deux méthodes importantes quant à la communication environnement/agent :

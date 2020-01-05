@@ -2,7 +2,7 @@ import random
 import gym
 
 # MEMO
-# action_sample : espace d'actions : 2 valuers (droite / gauche)
+# action_sample : espace d'actions : 2 valeurs (droite / gauche)
 # state / next_state = tableau de 4 elements
 # action : 0 ou 1
 # reward : 1 si la baton n'est pas tombé
@@ -49,9 +49,8 @@ class ExperienceReplayAgent:
         @param batch_size: la taille du batch généré via la mémoire
         """
         self.action_space = action_space
-        self.memory = Memory(100, 20)  # bien penser a initialiser la memoire pour ne pas avoir d'index out of range
-        self.position = 0
         self.batch_size = batch_size
+        self.memory = Memory(100, self.batch_size)  # bien penser a initialiser la memoire pour ne pas avoir d'index out of range
 
     def act(self):
         """
@@ -85,17 +84,14 @@ class ExperienceReplayAgent:
 if __name__ == '__main__':
     env = gym.make("CartPole-v1")  # creation de l'environnement
     agent = ExperienceReplayAgent(env.action_space, 20)  # creation de l'agent (batch_size=20)
-    nb_episodes = 100
-    done = False  # pour savoir quand on s'arrete (le baton est tombé ou il est sorti de l'environnement)
 
+    nb_episodes = 100
     for i in range(nb_episodes):
         state = env.reset()
         while True:
-            env.render()
             action = agent.act()
             next_state, reward, done, _ = env.step(action)
             agent.remember(state, action, reward, next_state, done)
-            state = next_state
             if done:
                 break
     batch = agent.creer_batch()  # creation du batch à partir de la memoire de l'agent

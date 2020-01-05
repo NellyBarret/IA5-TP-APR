@@ -93,42 +93,16 @@ class BreakoutAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
-        # model "de base"
-        # self.model = nn.Sequential(
-        #     nn.Linear(self.observation_space.shape[0], 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, self.action_space.n)
-        # )
-        self.model = Sequential()
-        self.model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.model.add(Dense(24, activation='relu'))
-        self.model.add(Dense(self.action_size, activation='linear'))
-        self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-        # self.model = Sequential()
-        # self.model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.model.add(Dense(48, activation='tanh'))
-        # self.model.add(Dense(self.action_size, activation='linear'))
-        # self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
-        #
-        # self.target_model = Sequential()
-        # self.target_model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.target_model.add(Dense(48, activation='tanh'))
-        # self.target_model.add(Dense(self.action_size, activation='linear'))
-        # self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
+        self.model = self.build_model()
+        self.target_model = self.build_model()
 
-        # self.model = Sequential(nn.Linear(self.state_size, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, self.action_size))
-        # target model pour la stabilité
-        self.target_model = Sequential()
-        self.target_model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
-        self.target_model.add(Dense(24, activation='relu'))
-        self.target_model.add(Dense(self.action_size, activation='linear'))
-        self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+    def build_model(self):
+        model = Sequential()
+        model.add(Dense(24, input_shape=(self.state_size,), activation='relu'))
+        model.add(Dense(24, activation='relu'))
+        model.add(Dense(self.action_size, activation='linear'))
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        return model
 
     def act(self, state, policy="greedy"):
         """
@@ -137,42 +111,37 @@ class BreakoutAgent:
         :param policy: la politique utilisée par l'agent
         :return: l'action choisie par la politique
         """
-
-        if numpy.random.random() <= self.exploration_rate:
-            return env.action_space.sample()
-        return numpy.argmax(self.model.predict(state))
         # argmax retourne l'indice de la meilleure valeur
-        # if policy == "greedy":
-        #     if numpy.random.rand() <= self.exploration_rate:
-        #         # on retourne une action aléatoire (exploration)
-        #         return random.randrange(self.action_size)
-        #     else:
-        #         # on retourne la meilleure action prédite par le réseau (intensification)
-        #         q_values = self.model.predict(state)
-        #         # print(q_values)
-        #         return numpy.argmax(q_values)
-        # elif policy == "boltzmann":
-        #     if numpy.random.rand() <= self.exploration_rate:
-        #         # on retourne une action aléatoire (exploration)
-        #         return random.randrange(self.action_size)
-        #     else:
-        #         tau = 0.8
-        #         q_values = self.model.predict(state)
-        #         sum_q_values = 0
-        #         boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
-        #         for i in range(len(q_values[0])):
-        #             # calcul de la somme des exp(q_val / tau)
-        #             sum_q_values += numpy.exp(q_values[0][i] / tau)
-        #         for i in range(len(q_values[0])):
-        #             # calcul de la probabilité de Boltzmann pour chaque action
-        #             current_q_value = q_values[0][i]
-        #             # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
-        #             boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
-        #         # on retourne l'action qui a la plus grande probabilité
-        #         return numpy.argmax(boltzmann_probabilities)
-        # else:
-        #     # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
-        #     return random.randrange(self.action_size)
+        if policy == "greedy":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return random.randrange(self.action_size)
+            else:
+                # on retourne la meilleure action prédite par le réseau (intensification)
+                q_values = self.model.predict(state)
+                return numpy.argmax(q_values)
+        elif policy == "boltzmann":
+            if numpy.random.rand() <= self.exploration_rate:
+                # on retourne une action aléatoire (exploration)
+                return random.randrange(self.action_size)
+            else:
+                tau = 0.8
+                q_values = self.model.predict(state)
+                sum_q_values = 0
+                boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+                for i in range(len(q_values[0])):
+                    # calcul de la somme des exp(q_val / tau)
+                    sum_q_values += numpy.exp(q_values[0][i] / tau)
+                for i in range(len(q_values[0])):
+                    # calcul de la probabilité de Boltzmann pour chaque action
+                    current_q_value = q_values[0][i]
+                    # sum(q_values[:i]) : les q_valeurs des actions entre 0 et i
+                    boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+                # on retourne l'action qui a la plus grande probabilité
+                return numpy.argmax(boltzmann_probabilities)
+        else:
+            # la politique demandée n'est pas implémentée donc on retourne une action aléatoire
+            return random.randrange(self.action_size)
 
     def remember(self, state, action, reward, next_state, done):
         """
@@ -191,40 +160,6 @@ class BreakoutAgent:
         Calcule les prédictions, met à jour le modèle et entraine le réseau
         La rétropropagation est faite par la fonction fit
         """
-        # mini_batch = self.memory.sample()
-        # x_batch, y_batch = [], []
-        # # on a assez d'experiences en memoire pour avoir un minibatch
-        # if mini_batch is not None:
-        #     for state, action, reward, next_state, done in mini_batch:
-        #         losses = []
-        #         if not done:
-        #             # TODO: ici on utilise le target model pour la prédiction du prochain état pour plus de stabilité dans le réseau (évite de modifier "en double" vu que Q et Q^ sont modifiées toutes les deux)
-        #             # q_value = (reward + self.gamma * numpy.amax(self.target_model.predict(next_state)[0]))
-        #             q_value = (reward + self.gamma * numpy.amax(self.model.predict(next_state)[0]))
-        #         else:
-        #             q_value = reward
-        #         q_values = self.model.predict(state)  # predictions pour un l'état donné en paramètre
-        #         q_values[0][action] = q_value  # mise a jour de la Q-valeur de l'action (pour l'état)
-        #         x_batch.append(state[0])
-        #         y_batch.append(q_values[0])
-        #         # TODO: utiliser la backpropagation
-        #         # TODO: obligatoire pour que le réseau apprenne
-        #         # TODO : lequel prédit sur target lequel sur model ?
-        #         # q_value_previous = self.target_model.predict(state)[0]
-        #         # erreur = carré de la différence entre l'état courant et l'état futur
-        #         # loss = math.pow((q_value_previous - q_value), 2)
-        #         # losses.append(loss)
-        #         # loss.
-        #
-        #
-        #         # entrainement sur le mini batch
-        #         # if done:
-        #         #     self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
-        #         # else:
-        #     self.model.fit(numpy.array(x_batch), numpy.array(y_batch), verbose=0, batch_size=self.memory.batch_size)
-        #
-        #     if self.exploration_rate > self.exploration_min:
-        #         self.exploration_rate *= self.exploration_decay
         x_batch, y_batch = [], []
         minibatch = self.memory.sample()
         if minibatch is not None:
@@ -260,6 +195,7 @@ def preprocessing(observation):
 
 
 def test_preprocessing(action):
+    env.reset()
     state, reward, done, _ = env.step(action)
     print("Before processing: " + str(numpy.array(state).shape))
     state = preprocessing(state)
@@ -269,7 +205,8 @@ def test_preprocessing(action):
 if __name__ == '__main__':
 
     env = gym.make("BreakoutNoFrameskip-v4")  # creation de l'environnement
-    # test_preprocessing(0)  # TODO: à décommenter
+    env = gym.wrappers.Monitor(env, "recordingDQNbreakout", force=True)
+    test_preprocessing(0)  # TODO: à décommenter
     # env = wrappers.Monitor(env, './video')
     # constantes pour l'agent DQN
     state_size = env.observation_space.shape[0]

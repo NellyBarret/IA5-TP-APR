@@ -353,15 +353,239 @@ for i in range(nb_episodes):
 
 Enfin, nous devons modifier quelque peu le programme principal afin que l'agent enregistre les nouvelles expériences qu'il a avec l'environnement. Le squelette (créations de l'environnement et de l'agent, boucle sur le nombre d'épisodes, boucle pour chaque épisode) ne change pas. En revanche l'agent ajoute chacune de ses expériences dans sa mémoire grâce à la fonction \lstinline{remember(...)} qui ajoute la nouvelle expérience à sa mémoire. Après avoir réalisé tous les épisodes, l'agent peut créer le batch sur sa mémoire. La création du batch est simplement un tirage aléatoire de n expériences où n est la taille du batch. Par exemple, ici nous créons un batch de 20 expériences (défini lors de la création de l'agent).
 
-\subsection{Deep Q-learning}
+\section{Deep Q-learning sur CartPole}
 
-\subsubsection{Question 5}
+Dans la section précédente nous avons défini le problème du CartPole ainsi qu'un agent basique qui choisit aléatoirement ses actions. Nous lui avons ensuite ajouté  une mémoire en vu qu'il puisse apprendre de ses expériences passées.
 
-\subsubsection{Question 6}
+\subsection{Construction du modèle neuronal}
 
-\subsubsection{Question 7}
+\subsubsection{Définition du modèle}
 
-\subsubsection{Question 8}
+Dans un premier temps, nous avons construit notre modèle neuronal. Celui-ci se compose d'une taille d'entrée égale à la taille d'un état (en l'occurence 4 pour CartPole) et d'une taille de sortie égale aux nombre d'actions (2 pour CartPole). Nous avons une seule couche cachée de taille 24 et qui a pour fonction d'activation \lstinline{relu}, i.e. que les neurones s'activent sur les entrées positives car la fonction relu peut se formaliser ainsi :
+
+$$relu(x) = \max \{0, x\} \text{ où } x \text{ est une entrée}$$
+
+\subsubsection{Paramétrage du modèle}
+
+Afin de trouver les meilleurs paramètres pour notre modèle neuronal, nous avons effectué plusieurs tests. Ci-dessous un tableau récapitulant les paramètres testés ainsi que leurs résultats :
+
+%TODO: différence 24/30/1024
+%TODO: différence tanh/relu
+
+\subsubsection{Définition de l'agent}
+
+\subsubsection{Paramétrage de l'agent}
+Nous avons plusieurs paramètres à prendre en compte et à ajuster à la résolution du problème de CartPole. Ces paramètres sont les suivants : 
+\begin{itemize}
+	\item La taille de la mémoire (\lstinline{memory_size}) : si la mémoire est trop petite, les batchs construits auront beaucoup de ressemblance (du fait de la petite taille de l'espace de tirage) donc le réseau apprendra peu. Par défaut la taille de la mémoire est fixée à 100000.
+    \item La taille du batch (\lstinline{batchsize}) : c'est sur ce batch que le réseau va se mettre à jour et donc apprendre. Si le batch est trop petit, le réseau apprendra peu ; s'il est trop grand, le temps d'apprentissage sera considérable.
+    \item Le gamma qui définit l'importance des récompenses à l'infini. Plus ce paramètre est proche de 1, plus l'agent aura tendance à attendre une meilleure récompense dans les états futurs (il privilégie une plus grosse récompense lointaine). Inversement, plus ce paramètre est proche de 0 plus l'agent va privilégier les récompenses proches. Nous l'avons défini à 0.99 afin de prendre en compte les récompenses lointaines.
+    \item Le taux d'apprentissage (\lstinline{learning_rate}) : nous l'avons défini à 0.001, valeur communément acquise par la communauté scientifique. Ce taux permet de plus ou moins apprendre l'erreur (entre la prédiction que le réseau a fait et la valeur cible).
+    \item Le taux d'exploration (\lstinline{exploration_rate}) est utilisé dans les stratégies $\epsilon$-greedy et Boltzmann. Ce taux permet de choisir si l'agent va faire une action aléatoire ou l'action qu'il prédit comme meilleure. Dans le premier cas, cela permet de diversifier l'apprentissage, i.e. d'explorer de nouveaux états. Dans le second, cela permet d'intensifier l'apprentissage, i.e. de rester dans des états proches pour augmenter la somme des récompenses. Ce taux débute à 1 puis est diminué par le facteur \lstinline{exploration_decay} (0.995) jusqu'à son minimum \lstinline{exploration_min} (0.01). Cela permet notamment de faire baisser le nombre d'explorations au fur et à mesure que l'agent apprend et devient meilleur.
+    \item nbepisodes 200
+    \item updatetargetnetwork 100 
+
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption=Programme principal de l'agent utilisant l'expérience replay]
+class DQNAgent:
+    """
+    Classe representant l'agent DQN et son reseau
+    """
+    def __init__(self, params):
+        """
+        Initialise le reseau et l'agent
+        @param params: dictionnaire contenant les parametres du reseau et de l'agent
+        """
+        self.state_size = params['state_size']  # taille de l'entree du reseau
+        self.action_size = params['action_size']  # taille de sortie du reseau
+
+        self.memory = Memory(params['memory_size'], params['batch_size'])  # memoire pour l'experience replay
+        self.batch_size = params['batch_size']
+
+        self.gamma = params['gamma']
+        self.learning_rate = params['learning_rate']
+        self.exploration_rate = params['exploration_rate']
+        self.exploration_decay = params['exploration_decay']
+        self.exploration_min = params['exploration_min']
+
+        self.model = self.build_model()
+        self.target_model = self.build_model()
+
+    def build_model(self):
+        """
+        Construit le modele neuronal
+        """
+        model = Sequential()
+        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(24, activation='relu'))
+        model.add(Dense(self.action_size, activation='linear'))
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        return model
+
+    def act(self, state, policy="greedy"):
+        """
+        Choisit une action pour l'etat donne
+        @param state: etat courant de l'agent
+        @param policy: la politique utilisee par l'agent
+        """
+        if policy == "greedy":
+            if numpy.random.rand() < self.exploration_rate:
+                return random.randrange(self.action_size)
+            else:
+                q_values = self.model.predict(state)
+                return numpy.argmax(q_values[0])
+        elif policy == "boltzmann":
+            if numpy.random.rand() <= self.exploration_rate:
+                return env.action_space.sample()
+            else:
+                tau = 0.8
+                q_values = self.model.predict(state)
+                sum_q_values = 0
+                boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+                for i in range(len(q_values[0])):
+                    sum_q_values += numpy.exp(q_values[0][i] / tau)
+                for i in range(len(q_values[0])):
+                    current_q_value = q_values[0][i]
+                    boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+                 return numpy.argmax(boltzmann_probabilities)
+        else:
+            return env.action_space.sample()
+
+    def remember(self, state, action, reward, next_state, done):
+         """
+        Ajoute une interaction a la memoire de l'agent
+        @param state: etat courant
+        @param action: action effectuee
+        @param reward: recompense recue de l'environnement
+        @param next_state: etat dans lequel on arrive
+        @param done: pour arreter l'agent quand il a fini
+        """
+        self.memory.add(state, action, reward, next_state, done)
+
+    def experience_replay(self):
+        """
+        Calcule les predictions, met a jour le modele et entraine le reseau
+        """
+        # states, q_val = [], []
+        # batch = self.memory.sample()  # creation du batch a partir de la memoire de l'agent
+        # if batch is not None:
+        #     for state, action, reward, next_state, done in batch:
+        #         # predictions des q-valeurs pour toutes les actions de l'etat
+        #         q_values = self.model.predict(state)
+        #         # mise a jour de la Q-valeur de l'action de l'etat
+        #         if done:
+        #             q_values[0][action] = reward
+        #         else:
+        #             q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
+        #         states.append(state[0]) # contient tous les etats
+        #         q_val.append(q_values[0])  # contient les predictions des q_valeurs
+        #         # TODO: a quel endroit ?
+        #         # self.model.fit(state, q_values, batch_size=len(states), verbose=0)
+        #         pred = self.model.predict(state)
+        #         y = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
+        #         self.model.fit(pred, y, batch_size=self.state_size, verbose=0)
+        #     # mise a jour du reseau sur le batch
+        #     # self.model.fit(numpy.array(states), numpy.array(q_val), batch_size=len(states), verbose=0)
+        #     if self.exploration_rate > self.exploration_min:
+        #         self.exploration_rate *= self.exploration_decay
+        if len(self.memory) < self.batch_size:  # self.memory.batch_size:
+            return
+        # batch = self.memory.sample()
+        batch = random.sample(self.memory, self.batch_size)
+        for state, action, reward, state_next, done in batch:
+            q_update = reward
+            if done:
+                q_values[0][action] = reward
+            else:
+                q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state
+            q_values = self.model.predict(state)
+            q_values[0][action] = q_update
+            self.model.fit(state, q_values, verbose=0)
+        self.exploration_rate *= self.exploration_decay
+        self.exploration_rate = max(self.exploration_min, self.exploration_rate)
+%TODO : comparer dfit dans et hors du for
+
+
+    def update_target_network(self):
+        """
+        Met a jour le target model a partir du model
+        """
+        self.target_model.set_weights(self.model.get_weights())
+
+
+if __name__ == '__main__':
+    env = gym.make('CartPole-v1')
+
+    # constantes pour l'agent DQN
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+    memory_size = 100000
+    batch_size = 64  # 64
+    gamma = 0.99  # 0.99  # importance des recompenses a l'infini
+    learning_rate = 0.001  # taux d'apprentissage de l'erreur entre la cible et la prediction
+    exploration_rate = 1  # pour savoir si on prend une action random ou la meilleure action
+    exploration_decay = 0.995  # pour faire descendre l'exploration_rate pour baisser le nombre d'explorations au fur et a mesure que l'agent apprend et devient meilleur
+    exploration_min = 0.01
+
+    # constantes pour l'execution
+    nb_episodes = 200
+    update_target_network = 100  # pas pour mettre a jour le target network
+    save_weights = False  # True pour sauvegarder les poids du reseau dans un fichier tous les save_step episodes
+    save_step = 10  # pas pour sauvegarder les poids du reseau
+
+    # creation de l'agent avec ses parametres
+    params = {
+        'state_size': state_size,
+        'action_size': action_size,
+        'memory_size': memory_size,
+        'batch_size': batch_size,
+        'gamma': gamma,
+        'learning_rate': learning_rate,
+        'exploration_rate': exploration_rate,
+        'exploration_decay': exploration_decay,
+        'exploration_min': exploration_min
+    }
+    agent = DQNAgent(params)
+    liste_rewards = []  # liste des recompenses obtenues pour chaque episode, permet de tracer le plot
+    global_counter = 0
+    for i in range(nb_episodes):
+        state = env.reset()
+        # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
+        state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
+        steps = 1
+        sum_reward = 0
+        while True:
+            action = agent.act(state, "greedy")  # choix d'une action (greedy: soit aleatoire soit via le reseau)
+            next_state, reward, done, _ = env.step(action)  # on "execute" l'action sur l'environnement
+            next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
+            agent.remember(state, action, reward, next_state, done)
+            state = next_state
+            sum_reward += reward
+            agent.experience_replay()
+            if done:
+                print("Episode", i, "- nombre de pas : ", steps, "- somme recompenses", sum_reward)
+                break
+            if global_counter % update_target_network == 0:
+                # on met a jour le target network tous les `update_target_network` pas
+                print("Le target network se met a jour")
+                agent.update_target_network()
+            steps += 1
+            global_counter += 1
+        liste_rewards.append(sum_reward)
+        if save_weights and i % save_step == 0:
+            print("Sauvegarde des poids du modele")
+            agent.model.save_weights("./cartpole_dqn.h5")
+    evolution_rewards(liste_rewards)
+    print("Meilleure recompense obtenue", max(liste_rewards), "lors de l'episode", liste_rewards.index(max(liste_rewards)))
+
+\end{lstlisting}
+
+\subsection{Calcul des Q-valeurs}
+
+\subsection{Politiques}
+
+\subsection{Apprentissage}
 
 \section{Breakout Atari}
 

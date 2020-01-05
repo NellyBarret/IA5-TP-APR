@@ -110,6 +110,9 @@ class DQNAgent:
         # target model pour la stabilité
 
     def build_model(self):
+        """
+        Construit le modèle neuronal
+        """
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
         model.add(Dense(24, activation='relu'))

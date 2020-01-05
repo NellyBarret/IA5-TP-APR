@@ -30,7 +30,7 @@ class Memory:
         @param action: l'action choisie par l'agent
         @param reward: la récompense gagnée
         @param next_state: l'état d'arrivée après exécution de l'action
-        @param done: True si l'expérience est finie (la bâton est tombé ou l'agent est sorti de l'environnement)
+        @param done: True si l'expérience est finie (le bâton est tombé ou l'agent est sorti de l'environnement)
         """
         # on ajoute l'experience et on incrémente la position dans la mémoire
         self.memory[self.position] = [state, action, reward, next_state, done]
@@ -39,6 +39,7 @@ class Memory:
     def sample(self):
         """
         Construit un batch aléatoire sur la mémoire de l'agent
+        :return: le batch d'expériences
         """
         if self.__len__() < self.batch_size:  # or [] in self.memory:
             # pas assez d'experiences pour construire le batch ou il existe des expériences vides
@@ -52,7 +53,7 @@ class Memory:
 
     def __len__(self):
         """
-        Retourne le nombre d'élélemnts (non nuls) dans la mémoire
+        Retourne le nombre d'éléments (non nuls) dans la mémoire
         :return: le nombre d'éléments dans la mémoire
         """
         return sum(len(item) > 0 for item in self.memory)  # len(self.memory)

@@ -48,16 +48,14 @@ if __name__ == '__main__':
     env = gym.make("CartPole-v1")  # creation de l'environnement
     # env = wrappers.Monitor(env, './video')
     agent = RandomAgent(env.action_space)  # creation de l'agent
+    liste_rewards = []
 
     nb_episodes = 1000
-
-    liste_rewards = []
-    done = False  # pour savoir quand on s'arrete (le baton est tombé ou il est sorti de l'environnement)
-
     for i in range(nb_episodes):
         total_reward = 0
         # env.render()
-        state = env.reset()
+        env.reset()
+        # state = env.reset()
         while True:
             # env.render()
             action = agent.act()

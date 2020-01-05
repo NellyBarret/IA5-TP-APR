@@ -1,18 +1,20 @@
 \BOOKMARK [1][-]{section.1}{Pr\351liminaires}{}% 1
-\BOOKMARK [1][-]{section.2}{Deep Q-network sur Cartpole}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{D\351but}{section.2}% 3
-\BOOKMARK [3][-]{subsubsection.2.1.1}{Question 1}{subsection.2.1}% 4
-\BOOKMARK [3][-]{subsubsection.2.1.2}{Question 2}{subsection.2.1}% 5
-\BOOKMARK [2][-]{subsection.2.2}{Experience replay}{section.2}% 6
-\BOOKMARK [3][-]{subsubsection.2.2.1}{Questions 3 et 4}{subsection.2.2}% 7
-\BOOKMARK [2][-]{subsection.2.3}{Deep Q-learning}{section.2}% 8
-\BOOKMARK [3][-]{subsubsection.2.3.1}{Question 5}{subsection.2.3}% 9
-\BOOKMARK [3][-]{subsubsection.2.3.2}{Question 6}{subsection.2.3}% 10
-\BOOKMARK [3][-]{subsubsection.2.3.3}{Question 7}{subsection.2.3}% 11
-\BOOKMARK [3][-]{subsubsection.2.3.4}{Question 8}{subsection.2.3}% 12
-\BOOKMARK [1][-]{section.3}{Breakout Atari}{}% 13
-\BOOKMARK [2][-]{subsubsection.3.0.1}{Question 1}{section.3}% 14
-\BOOKMARK [3][-]{subsubsection.3.0.2}{Question 2}{subsubsection.3.0.1}% 15
-\BOOKMARK [3][-]{subsubsection.3.0.3}{Question 3}{subsubsection.3.0.1}% 16
-\BOOKMARK [3][-]{subsubsection.3.0.4}{Question 4}{subsubsection.3.0.1}% 17
-\BOOKMARK [3][-]{subsubsection.3.0.5}{Question 5}{subsubsection.3.0.1}% 18
+\BOOKMARK [1][-]{section.2}{Agent al\351atoire sur Cartpole}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{D\351finitions et fonctionnalit\351s}{section.2}% 3
+\BOOKMARK [3][-]{subsubsection.2.1.1}{D\351finition de l'environnement}{subsection.2.1}% 4
+\BOOKMARK [3][-]{subsubsection.2.1.2}{D\351finition de l'agent}{subsection.2.1}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Analyse de performances}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.3}{Experience replay}{section.2}% 7
+\BOOKMARK [3][-]{subsubsection.2.3.1}{D\351finition de la m\351moire}{subsection.2.3}% 8
+\BOOKMARK [3][-]{subsubsection.2.3.2}{D\351finition de l'agent}{subsection.2.3}% 9
+\BOOKMARK [2][-]{subsection.2.4}{Deep Q-learning}{section.2}% 10
+\BOOKMARK [3][-]{subsubsection.2.4.1}{Question 5}{subsection.2.4}% 11
+\BOOKMARK [3][-]{subsubsection.2.4.2}{Question 6}{subsection.2.4}% 12
+\BOOKMARK [3][-]{subsubsection.2.4.3}{Question 7}{subsection.2.4}% 13
+\BOOKMARK [3][-]{subsubsection.2.4.4}{Question 8}{subsection.2.4}% 14
+\BOOKMARK [1][-]{section.3}{Breakout Atari}{}% 15
+\BOOKMARK [2][-]{subsubsection.3.0.1}{Question 1}{section.3}% 16
+\BOOKMARK [3][-]{subsubsection.3.0.2}{Question 2}{subsubsection.3.0.1}% 17
+\BOOKMARK [3][-]{subsubsection.3.0.3}{Question 3}{subsubsection.3.0.1}% 18
+\BOOKMARK [3][-]{subsubsection.3.0.4}{Question 4}{subsubsection.3.0.1}% 19
+\BOOKMARK [3][-]{subsubsection.3.0.5}{Question 5}{subsubsection.3.0.1}% 20

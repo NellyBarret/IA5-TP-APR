@@ -76,6 +76,15 @@ La suite de cette section décrit les préliminaires du fonctionnement des agent
 
 Chaque agent est implémenté dans un fichier qui lui est propre. Ainsi il suffit de lancer l'exécution du fichier voulu dans un IDE (e.g. Pycharm). La fonction \lstinline{main} de chaque fichier permet de créer l'environnement et l'agent ainsi que de faire apprendre l'agent sur l'environnement.
 
+Les fichiers correspondants :
+\begin{itemize}
+	\item randomCartPole.py : implémente l'agent aléatoire
+	\item ExperienceReplayAgent.py : implémente la mémoire des agents
+	\item DQNCartPole.py : implémente la résolution du problème CartPole avec un DQN
+	\item breakout.py : implémente la résolution du problème Breakout avec un DQN
+	\item breakout-convol.py : implémente la résolution du problème Breakout avec un Breakout convolutionnel
+\end{itemize}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Agent aléatoire sur Cartpole}
@@ -467,6 +476,12 @@ for state, action, reward, state_next, done in batch:
 
 Nous avons pu observer que l'agent apprend des comportements intéressants mais qu'il n'était pas très stable. Dans cette optique, nous avons ajouté un second réseau (\lstinline{target_network}) dans le but de stabiliser le réseau. Ce réseau se base sur le même modèle que l'original. La mise à jour est une recopie des poids du réseau de base dans le target network (voir section \ref{paramDQN}).
 
+\subsection{Performances}
+
+Notre agent a réussi à atteindre une récompense par épisode de 500 au meilleur de sa performance. On peut remarquer aussi qu'il l'a fait avant la fin des 200 épisodes, ce qui permet de considérer que notre agent résoud le problème du CartPole. On remarque néamoins qu'après 175 épisodes, il y a une chute des récompenses. Cela peut s'expliquer par le fait que malgré le target network, l'apprentissage avec un DQN reste instable. On peut aussi noter que notre agent a eu trois pics de performances et que l'apprentissage est en hausse à chaque épisode.
+
+\includegraphics[scale=0.5]{evolution_recompenses_dqn_cartpole.png}
+
 \section{Breakout Atari}
 
 Dans le problème du Breakout, le but est d'éliminer toutes les briques en les touchant avec une balle. Le balle rebo,ndit sur une plateforme et c'est cette plateforme qu'il faut drigier à droite et à gauche pour faire rebondir la balle et continuer à jouer. Un comportement intéressants serait de casser les briques d'un côté pour faire passer la balle derrière le mur de briques. 
@@ -487,11 +502,26 @@ def preprocessing(observation):
     return numpy.reshape(observation, (84, 84, 1))
 \end{lstlisting}
 
+Nous avons aussi codé une fonction pour tester que le pré-processing fonctionne correctement :
+
+\begin{lstlisting}[language=Python,caption=Test du préprocessing des états]
+def test_preprocessing(action):
+    env.reset()
+    state, reward, done, _ = env.step(action)
+    print("Before processing: " + str(numpy.array(state).shape))
+    state = preprocessing(state)
+    print("After processing: " + str(numpy.array(state).shape))
+\end{lstlisting}
+Résultat :
+\begin{lstlisting}[language=Python]
+Before processing: (210, 160, 3)
+After processing: (84, 84, 1)
+\end{lstlisting}
 \subsubsection{Réseau convolutionnel}
 
 Pour notre agent apprenant à jouer au Breakout, nous avons remplacé le réseau entièrement connecté (avec \lstinline{Dense}) par une réseau convolutionnel. Nous avons choisi d'en mettre 3 car cela semble le meilleur paramètres en terme de performances. Chaque couche s'active avec la fonctin ReLu. Afin d'aplanir la dernière couche nous utilisons la fonction \lstinline{Flatten()}. Enfin, la dernière couche est de la taille du nombre d'actions. Nous utilisons encore la fonction \lstinline{mse} pour l'erreur.
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption=Réseau convolutionnel de l'agent Breakout]
 input_shape = (84, 84, 1)
 self.model = Sequential()
 self.model.add(Conv2D(32, 8, strides=(4, 4), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
@@ -503,10 +533,37 @@ self.model.add(Dense((self.action_size,)))
 self.model.compile(loss="mse", optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), metrics=["accuracy"])
 \end{lstlisting}
 
+\subsubsection{Fonctions utilitaires}
+
+Nous avons défini des fonctions de manière à pouvoir sauvegarder le réseau avec ses paramètres ainsi que les poids de celui-ci dans des fichiers. Pour ce faire, nous récupérons les modèle au format JSON puis nous l'écrivons dans un fichier. Pour les poids, la fonction prédéfinie \lstinline{saveweights(...)} permet directement de les sauvegarder dans un fichier.
+\begin{lstlisting}[language=Python, caption=Sauvegarde du réseau neuronal et de ses poids]
+def save_network_file():
+    model_json = agent.model.to_json()
+    with open("modelDQNCartpole.json", "w") as json_file:
+        json_file.write(model_json)
+    agent.model.save_weights("./weightsDQNCartpole.h5")
+\end{lstlisting}
+
+Afin de pouvoir réutiliser ce modèle ainsi que ces poids, nous avons créé la fonction ci-dessous qui charge les données sauvegardées dans la variable \lstinline{loaded_model}. Le modèle est d'abord chargé puis les poidssont ajouté au modèle avec la fonction \lstinline{load_weights}.
+\begin{lstlisting}[language=Python, caption=Chargement du réseau neuronal et de ses poids]
+def load_network_file():
+    json_file = open('modelDQNCartpole.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("weightsDQNCartpole.h5")
+    return loaded_model
+\end{lstlisting}
+
+Afin de filmer les performances de notre agent nous avons utilisé le code ci-dessous, ce qui crée un dossier de nom du deuxième paramètre avec les vidéos correspondantes.
+\begin{lstlisting}[language=Python]
+env = gym.wrappers.Monitor(env, "recordingDQNbreakout", force=True)
+\end{lstlisting}
+
+
 \section{Annexes} \label{annexes}
 
 \subsection{Préliminaires - suite}
-
 
 Dans cette section préliminaire, nous allons définir quelques variables communes aux différentes implémentations. Ces variables font partie de la logique même utilisée par Gym.
 

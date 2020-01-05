@@ -18,11 +18,13 @@
 \BOOKMARK [3][-]{subsubsection.4.2.3}{Politiques}{subsection.4.2}% 18
 \BOOKMARK [3][-]{subsubsection.4.2.4}{Calcul des Q-valeurs}{subsection.4.2}% 19
 \BOOKMARK [3][-]{subsubsection.4.2.5}{Target model}{subsection.4.2}% 20
-\BOOKMARK [1][-]{section.5}{Breakout Atari}{}% 21
-\BOOKMARK [2][-]{subsection.5.1}{D\351finition de l'environnement}{section.5}% 22
-\BOOKMARK [2][-]{subsection.5.2}{D\351finition de l'agent}{section.5}% 23
-\BOOKMARK [3][-]{subsubsection.5.2.1}{Pr\351processing des \351tats}{subsection.5.2}% 24
-\BOOKMARK [3][-]{subsubsection.5.2.2}{R\351seau convolutionnel}{subsection.5.2}% 25
-\BOOKMARK [1][-]{section.6}{Annexes}{}% 26
-\BOOKMARK [2][-]{subsection.6.1}{Pr\351liminaires - suite}{section.6}% 27
-\BOOKMARK [2][-]{subsection.6.2}{Trac\351s du param\351trage du DQN}{section.6}% 28
+\BOOKMARK [2][-]{subsection.4.3}{Performances}{section.4}% 21
+\BOOKMARK [1][-]{section.5}{Breakout Atari}{}% 22
+\BOOKMARK [2][-]{subsection.5.1}{D\351finition de l'environnement}{section.5}% 23
+\BOOKMARK [2][-]{subsection.5.2}{D\351finition de l'agent}{section.5}% 24
+\BOOKMARK [3][-]{subsubsection.5.2.1}{Pr\351processing des \351tats}{subsection.5.2}% 25
+\BOOKMARK [3][-]{subsubsection.5.2.2}{R\351seau convolutionnel}{subsection.5.2}% 26
+\BOOKMARK [3][-]{subsubsection.5.2.3}{Fonctions utilitaires}{subsection.5.2}% 27
+\BOOKMARK [1][-]{section.6}{Annexes}{}% 28
+\BOOKMARK [2][-]{subsection.6.1}{Pr\351liminaires - suite}{section.6}% 29
+\BOOKMARK [2][-]{subsection.6.2}{Trac\351s du param\351trage du DQN}{section.6}% 30

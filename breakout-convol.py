@@ -1,12 +1,12 @@
-import math
 import random
-
 import cv2
 import gym
-import keras
-import matplotlib.pyplot as plt
 import numpy
-from gym import wrappers
+from keras import Sequential
+from keras.layers import Dense, Conv2D, Flatten
+from keras.models import model_from_json
+from keras.optimizers import RMSprop
+
 
 ## MEMO
 # action : 2 valeurs (droite / gauche)
@@ -15,13 +15,7 @@ from gym import wrappers
 # action : 0 (rien), 1 (tirer), 2 (gauche) and 3 (droite)
 # reward : 1 si la baton n'est pas tombé
 # done : True ou False
-
 # frame = image de 210×160 pixels avec une palette de 128 couleurs
-from keras import Sequential, Input, Model
-from keras.layers import Dense, Conv2D, Convolution2D, Lambda, Flatten, merge, Multiply
-from keras.losses import huber_loss
-from keras.optimizers import Adam, RMSprop
-import keras.backend as K
 
 
 class Memory:
@@ -95,91 +89,20 @@ class BreakoutAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
+        self.model = self.build_model()
+        self.target_model = self.build_model()
+
+    def build_model(self):
         input_shape = (84, 84, 1)
-        self.model = Sequential()
-        self.model.add(Conv2D(32,
-                              8,
-                              strides=(4, 4),
-                              padding="valid",
-                              activation="relu",
-                              input_shape=input_shape,
-                              data_format="channels_first"))
-        self.model.add(Conv2D(64,
-                              4,
-                              strides=(2, 2),
-                              padding="valid",
-                              activation="relu",
-                              input_shape=input_shape,
-                              data_format="channels_first"))
-        self.model.add(Conv2D(64,
-                              3,
-                              strides=(1, 1),
-                              padding="valid",
-                              activation="relu",
-                              input_shape=input_shape,
-                              data_format="channels_first"))
-        self.model.add(Flatten())
-        self.model.add(Dense(512, activation="relu"))
-        self.model.add(Dense((self.action_size,)))
-        self.model.compile(loss="mean_squared_error",
-                           optimizer=RMSprop(lr=0.00025,
-                                             rho=0.95,
-                                             epsilon=0.01),
-                           metrics=["accuracy"])
-        # We assume a theano backend here, so the "channels" are first.
-        # ATARI_SHAPE = (4, 105, 80)
-        #
-        # # With the functional API we need to define the inputs.
-        # frames_input = keras.layers.Input(ATARI_SHAPE, name='frames')
-        # actions_input = keras.layers.Input((self.action_size,), name='mask')
-        #
-        # # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
-        # normalized = keras.layers.Lambda(lambda x: x / 255.0)(frames_input)
-        #
-        # # "The first hidden layer convolves 16 8×8 filters with stride 4 with the input image and applies a rectifier nonlinearity."
-        # conv_1 = keras.layers.convolutional.Convolution2D(
-        #     16, 8, 8, subsample=(4, 4), activation='relu'
-        # )(normalized)
-        # # "The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity."
-        # conv_2 = keras.layers.convolutional.Convolution2D(
-        #     32, 4, 4, subsample=(2, 2), activation='relu'
-        # )(conv_1)
-        # # Flattening the second convolutional layer.
-        # conv_flattened = keras.layers.core.Flatten()(conv_2)
-        # # "The final hidden layer is fully-connected and consists of 256 rectifier units."
-        # hidden = keras.layers.Dense(256, activation='relu')(conv_flattened)
-        # # "The output layer is a fully-connected linear layer with a single output for each valid action."
-        # output = keras.layers.Dense(self.action_size)(hidden)
-        # # Finally, we multiply the output by the mask!
-        # filtered_output = keras.layers.merge([output, actions_input], mode='mul')
-        #
-        # self.model = keras.models.Model(input=[frames_input, actions_input], output=filtered_output)
-        # optimizer = optimizer = keras.optimizers.RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        # self.model.compile(optimizer, loss='mse')
-
-        # if self.dueling:
-        #     # Dueling Network
-        #     # Q = Value of state + (Value of Action - Mean of all action value)
-        #     hidden_feature_2 = Dense(512, activation='relu')(flat_feature)
-        #     state_value_prediction = Dense(1)(hidden_feature_2)
-        #     q_value_prediction = merge([q_value_prediction, state_value_prediction],
-        #                                mode=lambda x: x[0] - K.mean(x[0]) + x[1],
-        #                                output_shape=(self.num_actions,))
-
-        # select_q_value_of_action = Multiply()([q_value_prediction, action_one_hot])
-        # target_q_value = Lambda(lambda x: K.sum(x, axis=-1, keepdims=True),)(select_q_value_of_action)
-        # self.model = Model(inputs=[input_frame, action_one_hot], outputs=[q_value_prediction, target_q_value])
-
-        # TODO: faire avec 3 réseaux convolutionnels
-
-        # self.model = Model(input=[frames_input, actions_input], output=filtered_output)
-        # optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        # self.model.compile(optimizer, loss=huber_loss)
-        #
-        # self.target_model = Model(input=[frames_input, actions_input], output=filtered_output)
-        # optimizer2 = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        # self.target_model.compile(optimizer2, loss=huber_loss)
-
+        model = Sequential()
+        model.add(Conv2D(32, 8, strides=(4, 4), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+        model.add(Conv2D(64, 4, strides=(2, 2), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+        model.add(Conv2D(64, 3, strides=(1, 1), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+        model.add(Flatten())
+        model.add(Dense(512, activation="relu"))
+        model.add(Dense((self.action_size,)))
+        model.compile(loss="mean_squared_error", optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), metrics=["accuracy"])
+        return model
 
     def act(self, state, policy="greedy"):
         """
@@ -242,40 +165,6 @@ class BreakoutAgent:
         Calcule les prédictions, met à jour le modèle et entraine le réseau
         La rétropropagation est faite par la fonction fit
         """
-        # mini_batch = self.memory.sample()
-        # x_batch, y_batch = [], []
-        # # on a assez d'experiences en memoire pour avoir un minibatch
-        # if mini_batch is not None:
-        #     for state, action, reward, next_state, done in mini_batch:
-        #         losses = []
-        #         if not done:
-        #             # TODO: ici on utilise le target model pour la prédiction du prochain état pour plus de stabilité dans le réseau (évite de modifier "en double" vu que Q et Q^ sont modifiées toutes les deux)
-        #             # q_value = (reward + self.gamma * numpy.amax(self.target_model.predict(next_state)[0]))
-        #             q_value = (reward + self.gamma * numpy.amax(self.model.predict(next_state)[0]))
-        #         else:
-        #             q_value = reward
-        #         q_values = self.model.predict(state)  # predictions pour un l'état donné en paramètre
-        #         q_values[0][action] = q_value  # mise a jour de la Q-valeur de l'action (pour l'état)
-        #         x_batch.append(state[0])
-        #         y_batch.append(q_values[0])
-        #         # TODO: utiliser la backpropagation
-        #         # TODO: obligatoire pour que le réseau apprenne
-        #         # TODO : lequel prédit sur target lequel sur model ?
-        #         # q_value_previous = self.target_model.predict(state)[0]
-        #         # erreur = carré de la différence entre l'état courant et l'état futur
-        #         # loss = math.pow((q_value_previous - q_value), 2)
-        #         # losses.append(loss)
-        #         # loss.
-        #
-        #
-        #         # entrainement sur le mini batch
-        #         # if done:
-        #         #     self.model.fit(state, q_values, verbose=0, batch_size=self.memory.batch_size)
-        #         # else:
-        #     self.model.fit(numpy.array(x_batch), numpy.array(y_batch), verbose=0, batch_size=self.memory.batch_size)
-        #
-        #     if self.exploration_rate > self.exploration_min:
-        #         self.exploration_rate *= self.exploration_decay
         x_batch, y_batch = [], []
         minibatch = self.memory.sample()
         if minibatch is not None:
@@ -318,11 +207,35 @@ def test_preprocessing(action):
     print("After processing: " + str(numpy.array(state).shape))
 
 
-if __name__ == '__main__':
+def save_network_file():
+    """
+    Sauvegarde le réseau dans le fichier modelDQNBreakout.json ainsi que les poids de celui-ci dans weightsDQNbreakout.h5
+    """
+    print("Sauvegarde du modèle")
+    model_json = agent.model.to_json()
+    with open("modelDQNBreakout.json", "w") as json_file:
+        json_file.write(model_json)
+    print("Sauvegarde des poids du modèle")
+    agent.model.save_weights("./weightsDQNbreakout.h5")
 
+
+def load_network_file():
+    """
+    Charge le réseau stocké (modelDQNBreakout.json) ainsi que les poids de celui-ci (weightsDQNbreakout.h5)
+    """
+    json_file = open('modelDQNBreakout.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("weightsDQNbreakout.h5")
+    print("Loaded model from disk")
+    return loaded_model
+
+
+if __name__ == '__main__':
     env = gym.make("BreakoutNoFrameskip-v4")  # creation de l'environnement
+    env = gym.wrappers.Monitor(env, "recordingDQNBreakoutConvol", force=True)
     # test_preprocessing(0)  # TODO: à décommenter
-    # env = wrappers.Monitor(env, './video')
     # constantes pour l'agent DQN
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
@@ -337,6 +250,7 @@ if __name__ == '__main__':
     # constantes pour l'exécution
     nb_episodes = 200
     update_target_network = 100
+    save_network = False  # True pour sauvegarder le modèle et les poids du réseau dans un fichier
 
     # creation de l'agent avec ses paramètres
     params = {
@@ -372,12 +286,12 @@ if __name__ == '__main__':
             if done:
                 print("epsiode", i, "- steps : ", steps, "- somme reward", sum_reward)
                 break
-            # if steps % update_target_network == 0:
-            #     # on met à jour le target network tous les `update_target_network` pas
-            #     print("the target network is updating")
-            #     agent.update_target_network()
+            if steps % update_target_network == 0:
+                # on met à jour le target network tous les `update_target_network` pas
+                print("the target network is updating")
+                agent.update_target_network()
             steps += 1
         liste_rewards.append(sum_reward)
-    # print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))
-
-    # gym.upload('./video', api_key='blah')
+    if save_network:
+        save_network_file()
+    print("Meilleur reward obtenu", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))

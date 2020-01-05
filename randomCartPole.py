@@ -1,9 +1,6 @@
-import math
-
 import gym
 import matplotlib.pyplot as plt
 import numpy
-from gym import wrappers
 
 
 ## MEMO
@@ -48,7 +45,6 @@ def evolution_rewards(liste_rewards):
 # 2.1 - question 1
 if __name__ == '__main__':
     env = gym.make("CartPole-v1")  # creation de l'environnement
-    # env = wrappers.Monitor(env, './video')
     agent = RandomAgent(env.action_space)  # creation de l'agent
     liste_rewards = []
 

@@ -3,6 +3,7 @@ import numpy
 from keras import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from keras.models import model_from_json
 import random
 from collections import deque
 import matplotlib.pyplot as plt
@@ -80,34 +81,8 @@ class DQNAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
-        # model "de base"
-        # self.model = nn.Sequential(
-        #     nn.Linear(self.observation_space.shape[0], 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, 30),
-        #     nn.ReLU(),
-        #     nn.Linear(30, self.action_space.n)
-        # )
         self.model = self.build_model()
         self.target_model = self.build_model()
-        # self.model = Sequential()
-        # self.model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.model.add(Dense(48, activation='tanh'))
-        # self.model.add(Dense(self.action_size, activation='linear'))
-        # self.model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
-        #
-        # self.target_model = Sequential()
-        # self.target_model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        # self.target_model.add(Dense(48, activation='tanh'))
-        # self.target_model.add(Dense(self.action_size, activation='linear'))
-        # self.target_model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate, decay=self.exploration_decay))
-
-        # self.model = Sequential(nn.Linear(self.state_size, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, 30),
-        #               nn.ReLU(),
-        #               nn.Linear(30, self.action_size))
-        # target model pour la stabilité
 
     def build_model(self):
         """
@@ -233,9 +208,33 @@ def evolution_rewards(liste_rewards):
     plt.show()
 
 
+def save_network_file():
+    """
+    Sauvegarde le réseau dans le fichier modelDQNCartpole.json ainsi que les poids de celui-ci dans modelDQNCartpole.h5
+    """
+    print("Sauvegarde du modèle")
+    model_json = agent.model.to_json()
+    with open("modelDQNCartpole.json", "w") as json_file:
+        json_file.write(model_json)
+    print("Sauvegarde des poids du modèle")
+    agent.model.save_weights("./weightsDQNCartpole.h5")
+
+
+def load_network_file():
+    """
+    Charge le réseau stocké (modelDQNCartpole.json) ainsi que les poids de celui-ci (modelDQNCartpole.h5)
+    """
+    json_file = open('modelDQNCartpole.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("weightsDQNCartpole.h5")
+    print("Loaded model from disk")
+    return loaded_model
+
+
 if __name__ == '__main__':
     env = gym.make('CartPole-v1')
-
     # constantes pour l'agent DQN
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
@@ -248,10 +247,9 @@ if __name__ == '__main__':
     exploration_min = 0.01
 
     # constantes pour l'exécution
-    nb_episodes = 200
+    nb_episodes = 7
     update_target_network = 100  # pas pour mettre à jour le target network
-    save_weights = False  # True pour sauvegarder les poids du réseau dans un fichier tous les save_step episodes
-    save_step = 10  # pas pour sauvegarder les poids du réseau
+    save_network = False  # True pour sauvegarder le modèle et les poids du réseau dans un fichier
 
     # creation de l'agent avec ses paramètres
     params = {
@@ -292,8 +290,7 @@ if __name__ == '__main__':
             steps += 1
             global_counter += 1
         liste_rewards.append(sum_reward)
-        if save_weights and i % save_step == 0:
-            print("Sauvegarde des poids du modèle")
-            agent.model.save_weights("./cartpole_dqn.h5")
+    if save_network:
+        save_network_file()
     evolution_rewards(liste_rewards)
     print("Meilleure récompense obtenue", max(liste_rewards), "lors de l'épisode", liste_rewards.index(max(liste_rewards)))

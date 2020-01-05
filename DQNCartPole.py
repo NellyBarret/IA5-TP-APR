@@ -204,11 +204,12 @@ class DQNAgent:
             return
         # batch = self.memory.sample()
         batch = random.sample(self.memory, self.batch_size)
-        for state, action, reward, state_next, terminal in batch:
-            q_update = reward
-            if not terminal:
-                q_update = (reward + self.gamma * numpy.amax(self.model.predict(state_next)[0]))
+        for state, action, reward, state_next, done in batch:
             q_values = self.model.predict(state)
+            if done:
+                q_update = reward
+            else:
+                q_update = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
             q_values[0][action] = q_update
             self.model.fit(state, q_values, verbose=0)
         self.exploration_rate *= self.exploration_decay

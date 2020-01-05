@@ -114,8 +114,8 @@ class DQNAgent:
         Construit le modèle neuronal
         """
         model = Sequential()
-        model.add(Dense(30, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(30, activation='relu'))
+        model.add(Dense(1024, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(1024, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model

@@ -1,25 +1,23 @@
 \BOOKMARK [1][-]{section.1}{Pr\351liminaires}{}% 1
-\BOOKMARK [1][-]{section.2}{Agent al\351atoire sur Cartpole}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{D\351finitions et fonctionnalit\351s}{section.2}% 3
-\BOOKMARK [3][-]{subsubsection.2.1.1}{D\351finition de l'environnement}{subsection.2.1}% 4
-\BOOKMARK [3][-]{subsubsection.2.1.2}{D\351finition de l'agent}{subsection.2.1}% 5
-\BOOKMARK [2][-]{subsection.2.2}{Analyse de performances}{section.2}% 6
-\BOOKMARK [2][-]{subsection.2.3}{Experience replay}{section.2}% 7
-\BOOKMARK [3][-]{subsubsection.2.3.1}{D\351finition de la m\351moire}{subsection.2.3}% 8
-\BOOKMARK [3][-]{subsubsection.2.3.2}{D\351finition de l'agent}{subsection.2.3}% 9
-\BOOKMARK [1][-]{section.3}{Deep Q-learning sur CartPole}{}% 10
-\BOOKMARK [2][-]{subsection.3.1}{Construction du mod\350le neuronal}{section.3}% 11
-\BOOKMARK [3][-]{subsubsection.3.1.1}{D\351finition du mod\350le}{subsection.3.1}% 12
-\BOOKMARK [3][-]{subsubsection.3.1.2}{Param\351trage du mod\350le}{subsection.3.1}% 13
-\BOOKMARK [2][-]{subsection.3.2}{Construction de l'agent}{section.3}% 14
-\BOOKMARK [3][-]{subsubsection.3.2.1}{D\351finition de l'agent}{subsection.3.2}% 15
-\BOOKMARK [3][-]{subsubsection.3.2.2}{Param\351trage de l'agent}{subsection.3.2}% 16
-\BOOKMARK [2][-]{subsection.3.3}{Calcul des Q-valeurs}{section.3}% 17
-\BOOKMARK [2][-]{subsection.3.4}{Politiques}{section.3}% 18
-\BOOKMARK [2][-]{subsection.3.5}{Apprentissage}{section.3}% 19
-\BOOKMARK [1][-]{section.4}{Breakout Atari}{}% 20
-\BOOKMARK [2][-]{subsubsection.4.0.1}{Question 1}{section.4}% 21
-\BOOKMARK [3][-]{subsubsection.4.0.2}{Question 2}{subsubsection.4.0.1}% 22
-\BOOKMARK [3][-]{subsubsection.4.0.3}{Question 3}{subsubsection.4.0.1}% 23
-\BOOKMARK [3][-]{subsubsection.4.0.4}{Question 4}{subsubsection.4.0.1}% 24
-\BOOKMARK [3][-]{subsubsection.4.0.5}{Question 5}{subsubsection.4.0.1}% 25
+\BOOKMARK [1][-]{section.2}{Compilation et lancement}{}% 2
+\BOOKMARK [1][-]{section.3}{Agent al\351atoire sur Cartpole}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{D\351finitions et fonctionnalit\351s}{section.3}% 4
+\BOOKMARK [3][-]{subsubsection.3.1.1}{D\351finition de l'environnement}{subsection.3.1}% 5
+\BOOKMARK [3][-]{subsubsection.3.1.2}{D\351finition de l'agent}{subsection.3.1}% 6
+\BOOKMARK [2][-]{subsection.3.2}{Analyse de performances}{section.3}% 7
+\BOOKMARK [2][-]{subsection.3.3}{Experience replay}{section.3}% 8
+\BOOKMARK [3][-]{subsubsection.3.3.1}{D\351finition de la m\351moire}{subsection.3.3}% 9
+\BOOKMARK [3][-]{subsubsection.3.3.2}{D\351finition de l'agent}{subsection.3.3}% 10
+\BOOKMARK [1][-]{section.4}{Deep Q-learning sur CartPole}{}% 11
+\BOOKMARK [2][-]{subsection.4.1}{Construction du mod\350le neuronal}{section.4}% 12
+\BOOKMARK [3][-]{subsubsection.4.1.1}{D\351finition du mod\350le}{subsection.4.1}% 13
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Param\351trage du mod\350le}{subsection.4.1}% 14
+\BOOKMARK [2][-]{subsection.4.2}{Construction de l'agent}{section.4}% 15
+\BOOKMARK [3][-]{subsubsection.4.2.1}{D\351finition de l'agent}{subsection.4.2}% 16
+\BOOKMARK [3][-]{subsubsection.4.2.2}{Param\351trage de l'agent}{subsection.4.2}% 17
+\BOOKMARK [3][-]{subsubsection.4.2.3}{Politiques}{subsection.4.2}% 18
+\BOOKMARK [3][-]{subsubsection.4.2.4}{Calcul des Q-valeurs}{subsection.4.2}% 19
+\BOOKMARK [3][-]{subsubsection.4.2.5}{Target model}{subsection.4.2}% 20
+\BOOKMARK [1][-]{section.5}{Breakout Atari}{}% 21
+\BOOKMARK [1][-]{section.6}{Annexes}{}% 22
+\BOOKMARK [2][-]{subsection.6.1}{Pr\351liminaires - suite}{section.6}% 23

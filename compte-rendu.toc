@@ -1,0 +1,24 @@
+\babel@toc {french}{}
+\contentsline {section}{\numberline {1}Pr\IeC {\'e}liminaires}{1}{section.1}
+\contentsline {section}{\numberline {2}Compilation et lancement}{2}{section.2}
+\contentsline {section}{\numberline {3}Agent al\IeC {\'e}atoire sur Cartpole}{2}{section.3}
+\contentsline {subsection}{\numberline {3.1}D\IeC {\'e}finitions et fonctionnalit\IeC {\'e}s}{2}{subsection.3.1}
+\contentsline {subsubsection}{\numberline {3.1.1}D\IeC {\'e}finition de l'environnement}{2}{subsubsection.3.1.1}
+\contentsline {subsubsection}{\numberline {3.1.2}D\IeC {\'e}finition de l'agent}{2}{subsubsection.3.1.2}
+\contentsline {subsection}{\numberline {3.2}Analyse de performances}{4}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Experience replay}{4}{subsection.3.3}
+\contentsline {subsubsection}{\numberline {3.3.1}D\IeC {\'e}finition de la m\IeC {\'e}moire}{4}{subsubsection.3.3.1}
+\contentsline {subsubsection}{\numberline {3.3.2}D\IeC {\'e}finition de l'agent}{6}{subsubsection.3.3.2}
+\contentsline {section}{\numberline {4}Deep Q-learning sur CartPole}{6}{section.4}
+\contentsline {subsection}{\numberline {4.1}Construction du mod\IeC {\`e}le neuronal}{7}{subsection.4.1}
+\contentsline {subsubsection}{\numberline {4.1.1}D\IeC {\'e}finition du mod\IeC {\`e}le}{7}{subsubsection.4.1.1}
+\contentsline {subsubsection}{\numberline {4.1.2}Param\IeC {\'e}trage du mod\IeC {\`e}le}{7}{subsubsection.4.1.2}
+\contentsline {subsection}{\numberline {4.2}Construction de l'agent}{7}{subsection.4.2}
+\contentsline {subsubsection}{\numberline {4.2.1}D\IeC {\'e}finition de l'agent}{7}{subsubsection.4.2.1}
+\contentsline {subsubsection}{\numberline {4.2.2}Param\IeC {\'e}trage de l'agent}{9}{subsubsection.4.2.2}
+\contentsline {subsubsection}{\numberline {4.2.3}Politiques}{10}{subsubsection.4.2.3}
+\contentsline {subsubsection}{\numberline {4.2.4}Calcul des Q-valeurs}{11}{subsubsection.4.2.4}
+\contentsline {subsubsection}{\numberline {4.2.5}Target model}{11}{subsubsection.4.2.5}
+\contentsline {section}{\numberline {5}Breakout Atari}{11}{section.5}
+\contentsline {section}{\numberline {6}Annexes}{12}{section.6}
+\contentsline {subsection}{\numberline {6.1}Pr\IeC {\'e}liminaires - suite}{12}{subsection.6.1}

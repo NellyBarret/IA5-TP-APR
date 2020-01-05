@@ -9,6 +9,8 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage[colorlinks = true, linkcolor = blue, urlcolor  = blue, citecolor = blue, anchorcolor = blue]{hyperref}
 \title{Apprentissage profond par renforcement \\ Compte-rendu de TP}
 \author{Nelly Barret et Juliette Reisser}
@@ -55,7 +57,7 @@
 \tableofcontents
 
 \section{Préliminaires} \label{prelim}
-Notre TP se trouve à l'adresse suivante : \href{https://github.com/NellyBarret/IA5-TP-APR}{https://github.com/NellyBarret/IA5-TP-APR}. Pour des raisons de clarté et de concision, la documentation ainsi que les commentaires ont été retirés du code présent dans ce rapport. Pour les mêmes raisons, certaines parties de code ont étés remplacés par des commentaires (repérables par un \lstinline{##}). \\
+Notre TP se trouve à l'adresse suivante : \href{https://github.com/NellyBarret/IA5-TP-APR}{https://github.com/NellyBarret/IA5-TP-APR}. Pour des raisons de clarté et de concision, la documentation\footnote{Les fichiers Python contiennent la documentation complète.} ainsi que les commentaires ont été retirés du code présent dans ce rapport. Pour les mêmes raisons, certaines parties de code ont étés remplacés par des commentaires (repérables par un \lstinline{##}). \\
 
 Nous avons principalement utilisé les libraires suivantes :
 \begin{itemize}
@@ -259,18 +261,28 @@ Dans la section précédente nous avons défini le problème du CartPole ainsi q
 \subsubsection{Définition du modèle}
 Pour le code, voir la fonction \lstinline{build_model()} en \ref{modeleneuronal}.
 
-Dans un premier temps, nous avons construit le modèle neuronal de notre agent. La taille de l'entrée est égale à la taille d'un état (en l'occurence 4 pour CartPole) et la taille de sortie est égale aux nombre d'actions (2 pour CartPole). Nous avons une seule couche cachée de taille 24 et qui a pour fonction d'activation \lstinline{relu}, i.e. que les neurones s'activent sur les entrées positives car la fonction relu peut se formaliser ainsi :
+Dans un premier temps, nous avons construit le modèle neuronal de notre agent. La taille de l'entrée est égale à la taille d'un état (en l'occurence 4 pour CartPole) et la taille de sortie est égale aux nombre d'actions (2 pour CartPole). Nous avons une seule couche cachée de taille 24 et qui a pour fonction d'activation \lstinline{ReLu}, i.e. que les neurones s'activent sur les entrées positives car la fonction ReLu peut se formaliser ainsi :
 
-$$relu(x) = \max \{0, x\} \text{ où } x \text{ est une entrée}$$
+$$ReLu(x) = \max \{0, x\} \text{ où } x \text{ est une entrée}$$
 
 Nous avons aussi une fonction d'erreur, ici nous avons choisi \lstinline{mse}, i.e. mean squared error. Cette fonction d'erreur calcule la moyenne des différences au carré entre les valeurs prédites et les valeurs cibles. Cette fonction est la métrique par défaut lorsqu'il s'agit de réseaux neuronaux de ce type, c'est pourquoi nous avons choisi celle-ci.
 
 \subsubsection{Paramétrage du modèle}
 
 Afin de trouver les meilleurs paramètres pour notre modèle neuronal, nous avons effectué plusieurs tests. Ci-dessous un tableau récapitulant les paramètres testés ainsi que leurs résultats :
+\begin{table}[!h]
+\begin{tabular}{|p{0.7cm}|p{2.3cm}|p{2.3cm}|p{2.3cm}|p{2.3cm}|}
+\hline
+Expé & Taille de la couche cachée & Fonction d'activation & Utilisation du target network & Meilleure récompense obtenue sur un épisode \\ \hline
+1    & 24                         & ReLu                  & Oui                           & 72                                          \\ \hline
+2    & 30                         & ReLu                  & Oui                           & 99                                          \\ \hline
+3    & 1024                       & ReLu                  & Oui                           & 119                                         \\ \hline
+4    & 24                         & TanH                  & Oui                           & 50                                          \\ \hline
+5    & 24                         & ReLu                  & Non                           & 87                                          \\ \hline
+\end{tabular}
+\end{table}
 
-%TODO différence 24/30/1024
-%TODO différence tanh/relu
+Voir la section \ref{graphDQN} pour les graphiques correspondants.
 
 \subsection{Construction de l'agent}
 
@@ -337,7 +349,7 @@ Voir section \ref{targetmodelDQN}
 
 Le programme principal de l'agent DQN reprend le pseudo-code donné en section \ref{prelim}. Pour chaque épisode, l'agent choisit une action, la réalise dans l'environnement, ajoute cette nouvelle expérience à sa mémoire et comptabilise ses récompenses.
 \begin{lstlisting}[language=Python, caption=Programme principal de l'agent DQN]
-## creation de l'environnement et de l'agent avec ses parametres
+## creation de l'environnement "CartPole-v1" et de l'agent avec ses parametres
 liste_rewards = []
 global_counter = 0
     for i in range(nb_episodes):
@@ -379,36 +391,20 @@ Nous avons plusieurs paramètres à prendre en compte et à ajuster à la résol
 
 \begin{lstlisting}[language=Python, caption=Paramétrage de l'agent DQN]
 if __name__ == '__main__':
-    env = gym.make('CartPole-v1')
-
-    # constantes pour l'agent DQN
-    state_size = env.observation_space.shape[0]
-    action_size = env.action_space.n
-    memory_size = 100000
-    batch_size = 64
-    gamma = 0.99
-    learning_rate = 0.001
-    exploration_rate = 1
-    exploration_decay = 0.995
-    exploration_min = 0.01
-
-    # constantes pour l'execution
+    ## creation de l'environnement "CartPole-v1"
+    
     nb_episodes = 200
     update_target_network = 100
-    save_weights = False
-    save_step = 10
-
-    # creation de l'agent avec ses parametres
     params = {
-        'state_size': state_size,
-        'action_size': action_size,
-        'memory_size': memory_size,
-        'batch_size': batch_size,
-        'gamma': gamma,
-        'learning_rate': learning_rate,
-        'exploration_rate': exploration_rate,
-        'exploration_decay': exploration_decay,
-        'exploration_min': exploration_min
+        'state_size': env.observation_space.shape[0],
+        'action_size': env.action_space.n,
+        'memory_size': 100000,
+        'batch_size': 64,
+        'gamma': 0.99,
+        'learning_rate': 0.001,
+        'exploration_rate': 1,
+        'exploration_decay': 0.995,
+        'exploration_min': 0.01
     }
     agent = DQNAgent(params)
 \end{lstlisting}
@@ -475,9 +471,37 @@ Nous avons pu observer que l'agent apprend des comportements intéressants mais 
 
 Dans le problème du Breakout, le but est d'éliminer toutes les briques en les touchant avec une balle. Le balle rebo,ndit sur une plateforme et c'est cette plateforme qu'il faut drigier à droite et à gauche pour faire rebondir la balle et continuer à jouer. Un comportement intéressants serait de casser les briques d'un côté pour faire passer la balle derrière le mur de briques. 
 
+\subsection{Définition de l'environnement}
 
+\subsection{Définition de l'agent}
 
+\subsubsection{Préprocessing des états}
 
+Il est important d'avoir une étape de pré-processing afin de \og simplifier \fg{} les frames, i.e. de les passer en noir et blanc puis de les réduire afin de limiter l'explosion lors de l'apprentissage. Ci-dessous le code correspond à ces deux étapes.
+
+\begin{lstlisting}[language=Python,caption=Préprocessing des états]
+def preprocessing(observation):
+    observation = cv2.cvtColor(cv2.resize(observation, (84, 110)), cv2.COLOR_BGR2GRAY)
+    observation = observation[26:110, :]
+    ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
+    return numpy.reshape(observation, (84, 84, 1))
+\end{lstlisting}
+
+\subsubsection{Réseau convolutionnel}
+
+Pour notre agent apprenant à jouer au Breakout, nous avons remplacé le réseau entièrement connecté (avec \lstinline{Dense}) par une réseau convolutionnel. Nous avons choisi d'en mettre 3 car cela semble le meilleur paramètres en terme de performances. Chaque couche s'active avec la fonctin ReLu. Afin d'aplanir la dernière couche nous utilisons la fonction \lstinline{Flatten()}. Enfin, la dernière couche est de la taille du nombre d'actions. Nous utilisons encore la fonction \lstinline{mse} pour l'erreur.
+
+\begin{lstlisting}[language=Python]
+input_shape = (84, 84, 1)
+self.model = Sequential()
+self.model.add(Conv2D(32, 8, strides=(4, 4), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+self.model.add(Conv2D(64, 4, strides=(2, 2), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+self.model.add(Conv2D(64, 3, strides=(1, 1), padding="valid", activation="relu", input_shape=input_shape, data_format="channels_first"))
+self.model.add(Flatten())
+self.model.add(Dense(512, activation="relu"))
+self.model.add(Dense((self.action_size,)))
+self.model.compile(loss="mse", optimizer=RMSprop(lr=0.00025, rho=0.95, epsilon=0.01), metrics=["accuracy"])
+\end{lstlisting}
 
 \section{Annexes} \label{annexes}
 
@@ -521,5 +545,38 @@ Pour chaque episode dans (0, nb_max_epsiodes), Faire
 
 Dans un premier temps il est important de créer l'environnement voulu dans la variable \lstinline{env} et de créer un agent. C'est cet agent que nous allons entraîner dans l'environnement.
 Le principe de l'entraînement de l'agent est le suivant : l'agent va interagir avec l'environnement pendant \lstinline{nb_max_epsiodes} épisodes. Un épisode correspond à toutes les actions que l'agent va pouvoir faire jusqu'à ce qu'une condition ne soit plus respectée (e.g. le bâton est tombé). Un épisode est donc une boucle qui se termine grâce à une condition, ici c'est \lstinline{done}. Durant cette boucle, l'agent choisit une nouvelle action à faire grâce à sa fonction \lstinline{act()} puis l'exécute d'ans l'environnement avec la fonction \lstinline{step(action)}. Pour résumer, un épisode est défini par la boucle \lstinline{Tant que} et l'agent s'entraîne pendant \lstinline{nb_max_episodes} épisodes.
+
+\subsection{Tracés du paramétrage du DQN} \label{graphDQN}
+
+La légende est sous la forme :
+$$ < \text{taille de la couche cachée, fonction d'activation, utilisation du target network} >$$
+
+\begin{center}
+	\includegraphics[scale=0.3]{tarnetRelu24.png}
+	\captionof{figure}{< 24, ReLu, oui >}
+\end{center}
+
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[scale=0.3]{tarnetRelu30.png}
+  \captionof{figure}{< 30, ReLu, oui >}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[scale=0.3]{tarnetRelu1024.png}
+  \captionof{figure}{< 1024, ReLu, oui >}
+\end{minipage}
+
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[scale=0.3]{tarnetTanh24.png}
+  \captionof{figure}{< 24, Tanh, oui >}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[scale=0.3]{netRelu24.png}
+  \captionof{figure}{< 24, ReLu, non >}
+\end{minipage}
+
 
 \end{document}

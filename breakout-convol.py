@@ -95,32 +95,67 @@ class BreakoutAgent:
         self.exploration_decay = params['exploration_decay']
         self.exploration_min = params['exploration_min']
 
+        input_shape = (84, 84, 1)
+        self.model = Sequential()
+        self.model.add(Conv2D(32,
+                              8,
+                              strides=(4, 4),
+                              padding="valid",
+                              activation="relu",
+                              input_shape=input_shape,
+                              data_format="channels_first"))
+        self.model.add(Conv2D(64,
+                              4,
+                              strides=(2, 2),
+                              padding="valid",
+                              activation="relu",
+                              input_shape=input_shape,
+                              data_format="channels_first"))
+        self.model.add(Conv2D(64,
+                              3,
+                              strides=(1, 1),
+                              padding="valid",
+                              activation="relu",
+                              input_shape=input_shape,
+                              data_format="channels_first"))
+        self.model.add(Flatten())
+        self.model.add(Dense(512, activation="relu"))
+        self.model.add(Dense((self.action_size,)))
+        self.model.compile(loss="mean_squared_error",
+                           optimizer=RMSprop(lr=0.00025,
+                                             rho=0.95,
+                                             epsilon=0.01),
+                           metrics=["accuracy"])
+        # We assume a theano backend here, so the "channels" are first.
         # ATARI_SHAPE = (4, 105, 80)
-        # frames_input = Input(ATARI_SHAPE, name='frames')
-        # actions_input = Input((self.action_size,), name='filter')
+        #
+        # # With the functional API we need to define the inputs.
+        # frames_input = keras.layers.Input(ATARI_SHAPE, name='frames')
+        # actions_input = keras.layers.Input((self.action_size,), name='mask')
+        #
         # # Assuming that the input frames are still encoded from 0 to 255. Transforming to [0, 1].
-        # # TODO: expliquer
-        # normalized = Lambda(lambda x: x / 255.0)(frames_input)
-        # # The first hidden layer convolves 16 8×8 filters with stride 4 with the input image
-        # # and applies a rectifier nonlinearity
-        # conv_1 = Convolution2D(16, 8, 8, subsample=(4, 4), activation='relu')(normalized)
-        # # The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity
-        # conv_2 = Convolution2D(32, 4, 4, subsample=(2, 2), activation='relu')(conv_1)  # , data_format='channels_first'
-        # conv_flattened = Flatten()(conv_2)
-        # # The final hidden layer is fully-connected and consists of 256 rectifier units.
-        # hidden = Dense(256, activation='relu')(conv_flattened)
-        # output = Dense(self.action_size)(hidden)
-        # filtered_output = merge([output, actions_input], mode='mul')
-
-        input_frame = Input(shape=(84, 84, 4))
-        action_one_hot = Input(shape=(self.action_size,))
-        conv1 = Conv2D(32, (8, 8), strides=(4, 4), activation='relu')(input_frame)
-        conv2 = Conv2D(64, (4, 4), strides=(2, 2), activation='relu')(conv1)
-        conv3 = Conv2D(64, (3, 3), strides=(1, 1), activation='relu')(conv2)
-        flat_feature = Flatten()(conv3)
-        hidden_feature = Dense(512)(flat_feature)
-
-        q_value_prediction = Dense(self.action_size)(hidden_feature)
+        # normalized = keras.layers.Lambda(lambda x: x / 255.0)(frames_input)
+        #
+        # # "The first hidden layer convolves 16 8×8 filters with stride 4 with the input image and applies a rectifier nonlinearity."
+        # conv_1 = keras.layers.convolutional.Convolution2D(
+        #     16, 8, 8, subsample=(4, 4), activation='relu'
+        # )(normalized)
+        # # "The second hidden layer convolves 32 4×4 filters with stride 2, again followed by a rectifier nonlinearity."
+        # conv_2 = keras.layers.convolutional.Convolution2D(
+        #     32, 4, 4, subsample=(2, 2), activation='relu'
+        # )(conv_1)
+        # # Flattening the second convolutional layer.
+        # conv_flattened = keras.layers.core.Flatten()(conv_2)
+        # # "The final hidden layer is fully-connected and consists of 256 rectifier units."
+        # hidden = keras.layers.Dense(256, activation='relu')(conv_flattened)
+        # # "The output layer is a fully-connected linear layer with a single output for each valid action."
+        # output = keras.layers.Dense(self.action_size)(hidden)
+        # # Finally, we multiply the output by the mask!
+        # filtered_output = keras.layers.merge([output, actions_input], mode='mul')
+        #
+        # self.model = keras.models.Model(input=[frames_input, actions_input], output=filtered_output)
+        # optimizer = optimizer = keras.optimizers.RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+        # self.model.compile(optimizer, loss='mse')
 
         # if self.dueling:
         #     # Dueling Network
@@ -131,9 +166,9 @@ class BreakoutAgent:
         #                                mode=lambda x: x[0] - K.mean(x[0]) + x[1],
         #                                output_shape=(self.num_actions,))
 
-        select_q_value_of_action = Multiply()([q_value_prediction, action_one_hot])
-        target_q_value = Lambda(lambda x: K.sum(x, axis=-1, keepdims=True),)(select_q_value_of_action)
-        self.model = Model(inputs=[input_frame, action_one_hot], outputs=[q_value_prediction, target_q_value])
+        # select_q_value_of_action = Multiply()([q_value_prediction, action_one_hot])
+        # target_q_value = Lambda(lambda x: K.sum(x, axis=-1, keepdims=True),)(select_q_value_of_action)
+        # self.model = Model(inputs=[input_frame, action_one_hot], outputs=[q_value_prediction, target_q_value])
 
         # TODO: faire avec 3 réseaux convolutionnels
 
@@ -269,7 +304,6 @@ def preprocessing(observation):
     """
     Preprocessing des images (state) : réduction de la dimension (210*160*3 => 84*84*1) + noir et blanc
     """
-    # TODO : utiliser un Wrapper
     observation = cv2.cvtColor(cv2.resize(observation, (84, 110)), cv2.COLOR_BGR2GRAY)
     observation = observation[26:110, :]
     ret, observation = cv2.threshold(observation, 1, 255, cv2.THRESH_BINARY)
@@ -277,6 +311,7 @@ def preprocessing(observation):
 
 
 def test_preprocessing(action):
+    env.reset()
     state, reward, done, _ = env.step(action)
     print("Before processing: " + str(numpy.array(state).shape))
     state = preprocessing(state)

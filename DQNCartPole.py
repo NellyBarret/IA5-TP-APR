@@ -61,7 +61,7 @@ class Memory:
 
 class DQNAgent:
     """
-    Classe représentant l'agent DQN et son réseau
+    Classe représentant l'agent DQN et son réseau neuronal
     """
     def __init__(self, params):
         """

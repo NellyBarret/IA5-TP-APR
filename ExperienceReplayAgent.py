@@ -51,7 +51,6 @@ class ExperienceReplayAgent:
         self.action_space = action_space
         self.batch_size = batch_size
         self.memory = Memory(100, self.batch_size)  # bien penser a initialiser la memoire pour ne pas avoir d'index out of range
-        self.position = 0
 
     def act(self):
         """

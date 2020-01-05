@@ -2,6 +2,7 @@ import math
 
 import gym
 import matplotlib.pyplot as plt
+import numpy
 from gym import wrappers
 
 
@@ -36,7 +37,8 @@ def evolution_rewards(liste_rewards):
     """
     Trace l'évolution de la somme des récompenses par épisodes
     """
-    plt.plot([i for i in range(1, len(liste_rewards)+1)], liste_rewards)
+    plt.plot([i for i in range(len(liste_rewards))], liste_rewards)
+    plt.plot([i for i in range(len(liste_rewards))], [numpy.mean(liste_rewards) for _ in range(len(liste_rewards))])
     plt.title("Évolution de la somme des récompenses par épisode")
     plt.xlabel('Numéro de  l\'épisode')
     plt.ylabel('Somme des récompenses')

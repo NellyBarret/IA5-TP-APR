@@ -1,5 +1,6 @@
 %TODO mettre les nuémros des questions
 %TODO ref entre sections
+%TODO :calreté donc pas de doc dans code
 
 \documentclass[10pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
@@ -59,7 +60,7 @@
 \maketitle
 
 \section{Préliminaires} \label{prelim}
-Notre TP se trouve à l'adresse suivante : \href{https://github.com/NellyBarret/IA5-TP-APR}{https://github.com/NellyBarret/IA5-TP-APR}
+Notre TP se trouve à l'adresse suivante : \href{https://github.com/NellyBarret/IA5-TP-APR}{https://github.com/NellyBarret/IA5-TP-APR}. Pour des raisons de clarté et de concision, la documentation ainsi que les commentaires ont été retirés du code présent dans ce rapport. Pour les mêmes raisons, certaines parties de code ont étés remplacés par des commentaires (repérables par un \lstinline{##}). \\
 
 Nous avons principalement utilisé les libraires suivantes :
 \begin{itemize}
@@ -68,8 +69,9 @@ Nous avons principalement utilisé les libraires suivantes :
 	\item \href{https://numpy.org/}{Numpy} pour les calculs
 	\item \href{https://matplotlib.org/index.html}{Matplotlib} pour les tracés de courbe
 \end{itemize}
+~\\
 
-Nous allons d'abord définir quelques variables communes aux différentes implémentations. Ces variables font partie de la logique même utilisée par Gym.
+Dans cette section préliminaire, nous allons définir quelques variables communes aux différentes implémentations. Ces variables font partie de la logique même utilisée par Gym.
 
 Nous avons accès à deux variables importantes quant à la définition de l'environnement :
 \begin{itemize}
@@ -90,7 +92,7 @@ Enfin, nous avons deux méthodes importantes quant à la communication environne
 	\item \lstinline{step(action)} qui exécute une action sur l'environnement et retourne les 3 variables expliquées ci-dessus. 
 \end{itemize}
 
-Maintenant que nous avons définit les variables importantes, nous allons définir le fonctionnement général des agents.
+Maintenant que nous avons défini les variables importantes, nous allons définir le fonctionnement général des agents.
 
 \begin{lstlisting}[language=Python, caption=Pseudo-code du fonctionnement de l'agent dans son environnement]
 env = gym.make("nom-environnement")
@@ -130,67 +132,52 @@ Nous allons maintenant spécifier les variables que nous avons défini en sectio
 L'agent aléatoire suit une politique aléatoire pour choisir l'action qu'il va exécuter dans l'environnement. Il les choisit parmi ses actions possibles (disponibles dans \lstinline{env.action_space}). Il n'a pas de mémoire de ses précédentes expériences, ne prend pas en compte les gains futurs, ... . En somme, il exécute simplement des actions choisies aléatoirement.
 
 \begin{lstlisting}[language=Python, caption=Programme principal de l'agent aléatoire]
-env = gym.make("CartPole-v1")  # (1)
-agent = RandomAgent(env.action_space)  # (1)
-nb_episodes = 1000 # (2)
-liste_rewards = [] # (3)
+env = gym.make("CartPole-v1")
+agent = RandomAgent(env.action_space)
+nb_episodes = 1000 # (1)
+liste_rewards = [] # (2)
 for i in range(nb_episodes): 
     total_reward = 0
     env.reset()
-    while True: # (4)
+    while True: # (3)
         action = agent.act()
         _, reward, done, _ = env.step(action)
         total_reward += reward
         if done:
             break
-        liste_rewards.append(total_reward) # (3)
-evolution_rewards(liste_rewards)  # (3)
-print("Meilleure recompense obtenue", max(liste_rewards), "lors de l'episode", liste_rewards.index(max(liste_rewards))) # (3)
+        liste_rewards.append(total_reward) # (2)
+evolution_rewards(liste_rewards)  # (2)
+print("Meilleure recompense obtenue", max(liste_rewards), "lors de l'episode", liste_rewards.index(max(liste_rewards))) # (2)
 env.close()
 
 \end{lstlisting}
 
 Le code ci-dessus montre l'instanciation du pseudo-code de l'entraînement d'un agent (en section \ref{prelim}).
+
 \begin{lstlisting}[language=Python]
 # (1)
 \end{lstlisting}
-Nous créons un environnement Gym avec comme paramètre le nom de l'environnement à créer (ici, \lstinline{"CartPole-v1"}). Nous créons ensuite notre agent aléatoire. Comme vu précédemment, celui-ci redéfinit la méthode \lstinline{act()}.
+Nous devons choisir le nombre d'épisode sur lequel l'agent va s'entraîner. Comme l'agent a une politique aléatoire, le nombre d'épisode n'est pas un facteur influant les performances de l'agent puisque celui-ci exécute toujours des actions choisies aléatoirement. Nous prendrons comme paramètre 1000, ce qui permet de vérifier que l'agent interagisse correctement avec l'environnement sans pour autant que cela n'augmente de manière significative le temps d'exécution.
 
 \begin{lstlisting}[language=Python]
 # (2)
 \end{lstlisting}
-Nous devons ensuite choisir le nombre d'épisode sur lequel l'agent va s'entraîner. Comme l'agent a une politique aléatoire, le nombre d'épisode n'est pas un facteur influent sur les performances de l'agent puisque celui-ci exécute toujours des actions choisies aléatoirement. Nous prendrons comme paramètre 1000, ce qui permet de vérifier que l'agent interagisse correctement avec l'environnement sans pour autant que cela n'augmente (trop) le taux d'exécution.
+Cette partie traite de l'évolution de la somme des récompenses perçues par l'agent. Pour chaque épisode nous ajoutons la récompense obtenue pour l'action choisie ce qui permet d'avoir une récompense \og globale \fg{}  par épisode. La fonction \lstinline{evolution_rewards} permet de tracer la courbe correspondant à ces récompenses par épisode. Nous avons aussi récupéré la meilleure somme de récompense obtenue ainsi que le numéro de l'épisode où elle a été obtenue (ligne 16).
 
 \begin{lstlisting}[language=Python]
 # (3)
 \end{lstlisting}
-Cette partie traite de l'évolution de la somme des récompenses perçues par l'agent. Pour chaque épisode nous ajoutons la récompense obtenue pour l'action choisie ce qui permet d'avoir une récompense \og globale \fg{}  par épisode. La fonction \lstinline{evolution_rewards} permet de tracer la courbe correspondant à ces récompenses par épisode.
-
-Nous avons aussi récupéré la meilleure somme de récompense obtenue ainsi que le numéro de l'épisode où elle a été obtenue (ligne 16).
-
-\begin{lstlisting}[language=Python]
-# (4)
-\end{lstlisting}
-Dans cette partie là du code, nous rentrons dans un épisode. Dans cet épisode, nous devrons choisir une action puis l'exécuter dans l'environnement. La première étape est faite par la méthode \lstinline{act()}. Comme l'agent suit une politique aléatoire celle-ci retourne simplement une action parmi celles de l'espace d'actions de l'agent. Cela se traduit par le code ci-dessous :
+Dans cette partie là du code, nous rentrons dans un épisode. Dans cet épisode, l'agent devra choisir une action puis l'exécuter dans l'environnement. La première étape est faite par la méthode \lstinline{act()}. Comme l'agent suit une politique aléatoire celle-ci retourne simplement une action parmi celles de l'espace d'actions de l'agent. Cela se traduit par le code ci-dessous :
 
 \begin{lstlisting}[language=Python, caption=Implémentation de l'agent aléatoire]
 class RandomAgent:
-    """
-    Agent qui choisit des actions de maniere aleatoire
-    """
     def __init__(self, action_space):
-        """
-        Initialisation generale
-        """
-        self.action_space = action_space
+        ## assignation des parametres a leur variable eponyme
 
     def act(self):
-        """
-        Choisit une action aleatoirement parmi l'espace d'actions
-        """
         return self.action_space.sample()
 \end{lstlisting}
-Après avoir choisi une action, l'agent l'exécute dans l'environnement, ce qui lui permettra d'obtenir une récompense (ajoutée à la somme des récompenses de l'épisode en cours) et le booléen \lstinline{done}. Si ce booléen s'évalue à vrai, l'épisode se termine et le suivant commence. Sinon l'épisode continue et l'agent choisit une nouvelle action.
+Après avoir choisi une action, l'agent l'exécute dans l'environnement via la fonction \lstinline{step}, ce qui lui permettra d'obtenir une récompense (ajoutée à la somme des récompenses de l'épisode en cours) et le booléen \lstinline{done}. Si ce booléen s'évalue à vrai, l'épisode se termine et le suivant commence. Sinon l'épisode continue et l'agent choisit une nouvelle action.
 
 \subsection{Analyse de performances}
 
@@ -198,7 +185,7 @@ Pour évaluer notre agent aléatoire, nous avons réalisé un graphique traçant
 
 \includegraphics[scale=0.5]{evolution_recompenses_random.png} 
 
-Nous pouvons observer qu'il n'y a pas de tendance particulière. Cela semble cohérent avec le fait que l'agent n'a aucun moyen d'apprendre de ses erreurs (pas de mémoire ni de rétro-propagation) et qu'il ne choisisse pas les meilleures actions (politique aléatoire).
+La courbe bleue représente la somme des récompenses obtenue pour chaque épisode. La courbe orange représente la moyenne des récompenses pour les \lstinline{nb_episodes} épisodes. Nous pouvons observer qu'il n'y a pas de tendance particulière. Cela semble cohérent avec le fait que l'agent n'a aucun moyen d'apprendre de ses erreurs (pas de mémoire ni de rétro-propagation) et qu'il ne choisisse pas les meilleures actions (politique aléatoire). 
 
 \subsection{Experience replay}
 
@@ -210,37 +197,16 @@ Cet agent choisit aléatoirement ses actions et implémente une mémoire ce qui 
 
 \begin{lstlisting}[language=Python, caption=Implémentation de la mémoire d'un agent]
 class Memory:
-    """
-    Classe representant la memoire de l'agent
-    """
     def __init__(self, max_size, batch_size):
-        """
-        Initialise la memoire de l'agent
-        @param max_size: taille maximale de la memoire
-        @param batch_size: taille du batch genere
-        """
-        self.max_size = max_size
+        ## assignation des parametres a leur variable eponyme
         self.memory = [[] for _ in range(self.max_size)]
         self.position = 0
-        self.batch_size = batch_size
 
     def add(self, state, action, reward, next_state, done):
-        """
-        Ajoute une experience a la memoire de l'agent
-        @param state: etat courant de l'agent
-        @param action: action choisie par l'agent
-        @param reward: recompense gagnee
-        @param next_state: etat d'arrivee (apres action)
-        @param done: True si l'experience est finie
-        """
         self.memory[self.position] = [state, action, reward, next_state, done]
         self.position = (self.position + 1) % self.max_size
 
     def sample(self):
-        """
-        Construit un batch aleatoire sur la memoire de l'agent
-        :return: le batch d'experiences
-        """
         if self.__len__() < self.batch_size:
             return None
         else:
@@ -248,20 +214,16 @@ class Memory:
             return batch
 
     def __len__(self):
-        """
-        Retourne le nombre d'elements (non nuls) dans la memoire
-        :return: le nombre d'elements dans la memoire
-        """
         return sum(len(item) > 0 for item in self.memory)
 \end{lstlisting}
 
-Cette classe définit la mémoire de l'agent. Elle stocke les expérience que l'agent a avec l'environnement. La mémoire est donc modélisée par une liste d'expériences. Chaque expérience est une liste de 5 éléments : l'état courant de l'agent (variable \lstinline{state}), l'action choisie par l'agent (variable \lstinline{action}), la récompense obtenue pour cette action (variable \lstinline{reward}), l'état dans lequel va arriver l'agent après exécution de l'action (variable \lstinline{next_state}) et la variable \lstinline{done} qui indique si l'agent a terminé l'épisode ou non. 
+Cette classe définit la mémoire de l'agent. Elle stocke sous forme de liste les expériences que l'agent a avec l'environnement. Chaque expérience est une liste de 5 éléments : l'état courant de l'agent (variable \lstinline{state}), l'action choisie par l'agent (variable \lstinline{action}), la récompense obtenue pour cette action (variable \lstinline{reward}), l'état dans lequel va arriver l'agent après exécution de l'action (variable \lstinline{next_state}) et la variable \lstinline{done} qui indique si l'agent a terminé l'épisode ou non. Une expérience se formalise ainsi :
 
 $$
 expe_i = [state_i, action_i, reward_i, nextstate_i, done_i]
 $$
 
-Cette mémoire a un nombre maximal d'éléments, donc quand un nouvel élément est inséré et qu'il n'y a plus de place, ce nouvel élément remplace le plus ancien. Elle est donc composée comme suit : 
+Cette mémoire a un nombre maximal d'éléments (variable \lstinline{max_size}), donc quand un nouvel élément est inséré et qu'il n'y a plus de place, ce nouvel élément remplace le plus ancien. Elle se formalise comme suit : 
 
 $$
 memory = \bigcup\limits_{i=1}^{max\_size} expe_{i} = 
@@ -280,64 +242,32 @@ De plus, nous avons deux fonctions pour interagir avec la mémoire :
 
 Enfin, deux conditions sont à respecter :
 \begin{enumerate}
-	\item Le dépassement de la taille maximale doit être prévu. Il est prévu par le modulo utilisé pour la position de la nouvelle expérience à insérer. En effet, quand le buffer arrive à sa capacité, le modulo repart à 0, ce qui permet de remplacer les plus anciennes expériences par les nouvelles.
-	\item La mémoire est indépendante de l’environnement, et donc de l’espace d’action et d’état. Cette condition est respectée du fait d'insérer au fur et à mesure dans la mémoire et de n'avoir qu'une taille maximale comme condition.
+	\item Le dépassement de la taille maximale doit être prévu. Il est prévu par le modulo utilisé pour la position de la nouvelle expérience à insérer. En effet, quand la mémoire arrive à sa capacité maximale, la position revient à 0, ce qui permet de remplacer les plus anciennes expériences par les nouvelles.
+	\item La mémoire est indépendante de l’environnement, et donc de l’espace d’action et d’état. Cette condition est respectée par l'insertion au fur et à mesure dans la mémoire et le fait de n'avoir qu'une taille maximale comme condition.
 \end{enumerate}
 
 \subsubsection{Définition de l'agent}
 
 \begin{lstlisting}[language=Python, caption=Implémentation de l'agent utilisant son expérience]
 class ExperienceReplayAgent:
-    """
-    Agent qui choisit des actions de maniere aleatoire
-    """
     def __init__(self, action_space, batch_size):
-        """
-        Initialisation generale
-        @param action_space: espace d'actions (0 ou 1)
-        @param batch_size: taille du batch
-        """
-        self.action_space = action_space
-        self.batch_size = batch_size
+        ## assignation des parametres a leur variable eponyme
         self.memory = Memory(100, self.batch_size)
-        self.position = 0
         
     def act(self):
-        """
-        Choisit une action aleatoirement parmi l'espace d'actions
-        """
         return self.action_space.sample()
 
     def remember(self, state, action, reward, next_state, done):
-        """
-        Ajoute une interaction a la memoire de l'agent
-        @param state: etat courant
-        @param action: action effectuee
-        @param reward: recompense recue de l'environnement
-        @param next_state: etat dans lequel on arrive
-        @param done: pour arreter l'agent quand il a fini
-        """
         self.memory.add(state, action, reward, next_state, done)
 
-        def creer_batch(self):
-        """
-        Cree un batch de taille self.batch_size sur la base de la memoire
-        @return le batch
-        """
+    def creer_batch(self):
         return self.memory.sample()
 \end{lstlisting}
 
 Comme vu précédemment, cet agent redéfinit la méthode \lstinline{act()} et se base toujours sur une politique aléatoire. Cet agent a une fonctionnalité supplémentaire, celle de se souvenir d'une expérience grâce à la fonction \lstinline{remember(...)} qui permet d'ajouter une expérience à sa mémoire, comme définit ci-dessus.
-%        Cree un batch de taille self.batch_size sur la base de la mémoire
-%        @return le batch
-%        """
-%        return self.memory.sample()
-%\end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption=Programme principal de l'agent utilisant l'expérience replay]
-env = gym.make("CartPole-v1") 
-agent = ExperienceReplayAgent(env.action_space, 20)
-
+## creation de l'environnement et de l'agent
 nb_episodes = 100
 for i in range(nb_episodes):
     env.reset()
@@ -351,19 +281,22 @@ for i in range(nb_episodes):
     env.close()
 \end{lstlisting}
 
-Enfin, nous devons modifier quelque peu le programme principal afin que l'agent enregistre les nouvelles expériences qu'il a avec l'environnement. Le squelette (créations de l'environnement et de l'agent, boucle sur le nombre d'épisodes, boucle pour chaque épisode) ne change pas. En revanche l'agent ajoute chacune de ses expériences dans sa mémoire grâce à la fonction \lstinline{remember(...)} qui ajoute la nouvelle expérience à sa mémoire. Après avoir réalisé tous les épisodes, l'agent peut créer le batch sur sa mémoire. La création du batch est simplement un tirage aléatoire de n expériences où n est la taille du batch. Par exemple, ici nous créons un batch de 20 expériences (défini lors de la création de l'agent).
+Enfin, nous devons modifier quelque peu le programme principal afin que l'agent enregistre les nouvelles expériences qu'il a avec l'environnement. Le squelette (créations de l'environnement et de l'agent, boucle sur le nombre d'épisodes, boucle pour chaque épisode) ne change pas. En revanche l'agent ajoute chacune de ses expériences dans sa mémoire grâce à la fonction \lstinline{remember(...)}. Après avoir réalisé tous les épisodes, l'agent peut créer le batch sur sa mémoire. La création du batch est simplement un tirage aléatoire de n expériences où n est la taille du batch. Par exemple, ici nous créons un batch de 20 expériences (défini lors de la création de l'agent).
 
 \section{Deep Q-learning sur CartPole}
 
-Dans la section précédente nous avons défini le problème du CartPole ainsi qu'un agent basique qui choisit aléatoirement ses actions. Nous lui avons ensuite ajouté  une mémoire en vu qu'il puisse apprendre de ses expériences passées.
+Dans la section précédente nous avons défini le problème du CartPole ainsi qu'un agent basique qui choisit aléatoirement ses actions. Nous lui avons ensuite ajouté  une mémoire en vu qu'il puisse apprendre de ses expériences passées. Nous allons maintenant lui faire apprendre de ses expériences en lui implémentant un algorithme d'apprentissage profond de type Q-learning.
 
 \subsection{Construction du modèle neuronal}
 
 \subsubsection{Définition du modèle}
+Pour le code, voir la fonction \lstinline{build_model()} en \ref{dqn}.
 
-Dans un premier temps, nous avons construit notre modèle neuronal. Celui-ci se compose d'une taille d'entrée égale à la taille d'un état (en l'occurence 4 pour CartPole) et d'une taille de sortie égale aux nombre d'actions (2 pour CartPole). Nous avons une seule couche cachée de taille 24 et qui a pour fonction d'activation \lstinline{relu}, i.e. que les neurones s'activent sur les entrées positives car la fonction relu peut se formaliser ainsi :
+Dans un premier temps, nous avons construit le modèle neuronal de notre agent. La taille de l'entrée est égale à la taille d'un état (en l'occurence 4 pour CartPole) et la taille de sortie est égale aux nombre d'actions (2 pour CartPole). Nous avons une seule couche cachée de taille 24 et qui a pour fonction d'activation \lstinline{relu}, i.e. que les neurones s'activent sur les entrées positives car la fonction relu peut se formaliser ainsi :
 
 $$relu(x) = \max \{0, x\} \text{ où } x \text{ est une entrée}$$
+
+Nous avons aussi une fonction d'erreur, ici nous avons choisi \lstinline{mse}, i.e. mean squared error. Cette fonction d'erreur calcule la moyenne des différences au carré entre les valeurs prédites et les valeurs cibles. Cette fonction est la métrique par défaut lorsqu'il s'agit de réseaux neuronaux de ce type, c'est pourquoi nous avons choisi celle-ci.
 
 \subsubsection{Paramétrage du modèle}
 
@@ -372,9 +305,101 @@ Afin de trouver les meilleurs paramètres pour notre modèle neuronal, nous avon
 %TODO: différence 24/30/1024
 %TODO: différence tanh/relu
 
+\subsection{Construction de l'agent}\label{dqn}
+
 \subsubsection{Définition de l'agent}
 
-\subsubsection{Paramétrage de l'agent}
+La construction de cet agent se base donc sur un modèle de réseau neuronal et une mémoire. Les paramètres utilisés sont détaillés dans la section suivante en \ref{paramDQN}
+
+\begin{lstlisting}[language=Python, caption=Programme principal de l'agent utilisant l'expérience replay]
+class DQNAgent:
+    def __init__(self, params):
+        ## assignation des parametres a leur variable eponyme
+
+        self.model = self.build_model()
+        self.target_model = self.build_model()
+
+    def build_model(self):
+        model = Sequential()
+        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(24, activation='relu'))
+        model.add(Dense(self.action_size, activation='linear'))
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        return model
+
+	# (1)
+    def act(self, state, policy="greedy"):
+        if policy == "greedy":
+            ## politique e-greedy
+        elif policy == "boltzmann":
+            ## politique Boltzmann
+        else:
+            return env.action_space.sample()
+
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.add(state, action, reward, next_state, done)
+
+	# (2)
+    def experience_replay(self):
+        ## experience replay avec calcul des q-valeurs
+    
+    # (3)
+    def update_target_network(self):
+        self.target_model.set_weights(self.model.get_weights())
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# (1)
+\end{lstlisting}
+\begin{lstlisting}[language=Python, caption=Politique e-greedy]
+if numpy.random.rand() < self.exploration_rate:
+    return random.randrange(self.action_size)
+else:
+    q_values = self.model.predict(state)
+    return numpy.argmax(q_values[0])
+\end{lstlisting}    
+
+\begin{lstlisting}[language=Python,caption=politique de Boltzmann]          
+if numpy.random.rand() <= self.exploration_rate:
+    return env.action_space.sample()
+else:
+    tau = 0.8
+    q_values = self.model.predict(state)
+    sum_q_values = 0
+    boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
+    for i in range(len(q_values[0])):
+        sum_q_values += numpy.exp(q_values[0][i] / tau)
+    for i in range(len(q_values[0])):
+        current_q_value = q_values[0][i]
+        boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
+    return numpy.argmax(boltzmann_probabilities)
+\end{lstlisting}
+\begin{lstlisting}[language=Python]
+# (2)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Expérience reaply de l'agent DQN]
+if len(self.memory) < self.batch_size:
+    return
+batch = random.sample(self.memory, self.batch_size)
+for state, action, reward, state_next, done in batch:
+    q_update = reward
+    if done:
+        q_values[0][action] = reward
+    else:
+        q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state
+    q_values = self.model.predict(state)
+    q_values[0][action] = q_update
+    self.model.fit(state, q_values, verbose=0)
+self.exploration_rate *= self.exploration_decay
+self.exploration_rate = max(self.exploration_min, self.exploration_rate)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# (3)
+\end{lstlisting}
+
+\subsubsection{Paramétrage de l'agent} \label{paramDQN}
 Nous avons plusieurs paramètres à prendre en compte et à ajuster à la résolution du problème de CartPole. Ces paramètres sont les suivants : 
 \begin{itemize}
 	\item La taille de la mémoire (\lstinline{memory_size}) : si la mémoire est trop petite, les batchs construits auront beaucoup de ressemblance (du fait de la petite taille de l'espace de tirage) donc le réseau apprendra peu. Par défaut la taille de la mémoire est fixée à 100000.
@@ -387,133 +412,7 @@ Nous avons plusieurs paramètres à prendre en compte et à ajuster à la résol
 
 \end{itemize}
 
-\begin{lstlisting}[language=Python, caption=Programme principal de l'agent utilisant l'expérience replay]
-class DQNAgent:
-    """
-    Classe representant l'agent DQN et son reseau
-    """
-    def __init__(self, params):
-        """
-        Initialise le reseau et l'agent
-        @param params: dictionnaire contenant les parametres du reseau et de l'agent
-        """
-        self.state_size = params['state_size']  # taille de l'entree du reseau
-        self.action_size = params['action_size']  # taille de sortie du reseau
-
-        self.memory = Memory(params['memory_size'], params['batch_size'])  # memoire pour l'experience replay
-        self.batch_size = params['batch_size']
-
-        self.gamma = params['gamma']
-        self.learning_rate = params['learning_rate']
-        self.exploration_rate = params['exploration_rate']
-        self.exploration_decay = params['exploration_decay']
-        self.exploration_min = params['exploration_min']
-
-        self.model = self.build_model()
-        self.target_model = self.build_model()
-
-    def build_model(self):
-        """
-        Construit le modele neuronal
-        """
-        model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(24, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-        return model
-
-    def act(self, state, policy="greedy"):
-        """
-        Choisit une action pour l'etat donne
-        @param state: etat courant de l'agent
-        @param policy: la politique utilisee par l'agent
-        """
-        if policy == "greedy":
-            if numpy.random.rand() < self.exploration_rate:
-                return random.randrange(self.action_size)
-            else:
-                q_values = self.model.predict(state)
-                return numpy.argmax(q_values[0])
-        elif policy == "boltzmann":
-            if numpy.random.rand() <= self.exploration_rate:
-                return env.action_space.sample()
-            else:
-                tau = 0.8
-                q_values = self.model.predict(state)
-                sum_q_values = 0
-                boltzmann_probabilities = [0 for _ in range(len(q_values[0]))]
-                for i in range(len(q_values[0])):
-                    sum_q_values += numpy.exp(q_values[0][i] / tau)
-                for i in range(len(q_values[0])):
-                    current_q_value = q_values[0][i]
-                    boltzmann_probabilities[i] = numpy.exp(current_q_value/tau) / sum_q_values
-                 return numpy.argmax(boltzmann_probabilities)
-        else:
-            return env.action_space.sample()
-
-    def remember(self, state, action, reward, next_state, done):
-         """
-        Ajoute une interaction a la memoire de l'agent
-        @param state: etat courant
-        @param action: action effectuee
-        @param reward: recompense recue de l'environnement
-        @param next_state: etat dans lequel on arrive
-        @param done: pour arreter l'agent quand il a fini
-        """
-        self.memory.add(state, action, reward, next_state, done)
-
-    def experience_replay(self):
-        """
-        Calcule les predictions, met a jour le modele et entraine le reseau
-        """
-        # states, q_val = [], []
-        # batch = self.memory.sample()  # creation du batch a partir de la memoire de l'agent
-        # if batch is not None:
-        #     for state, action, reward, next_state, done in batch:
-        #         # predictions des q-valeurs pour toutes les actions de l'etat
-        #         q_values = self.model.predict(state)
-        #         # mise a jour de la Q-valeur de l'action de l'etat
-        #         if done:
-        #             q_values[0][action] = reward
-        #         else:
-        #             q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
-        #         states.append(state[0]) # contient tous les etats
-        #         q_val.append(q_values[0])  # contient les predictions des q_valeurs
-        #         # TODO: a quel endroit ?
-        #         # self.model.fit(state, q_values, batch_size=len(states), verbose=0)
-        #         pred = self.model.predict(state)
-        #         y = reward + self.gamma * numpy.max(self.target_model.predict(next_state)[0])
-        #         self.model.fit(pred, y, batch_size=self.state_size, verbose=0)
-        #     # mise a jour du reseau sur le batch
-        #     # self.model.fit(numpy.array(states), numpy.array(q_val), batch_size=len(states), verbose=0)
-        #     if self.exploration_rate > self.exploration_min:
-        #         self.exploration_rate *= self.exploration_decay
-        if len(self.memory) < self.batch_size:  # self.memory.batch_size:
-            return
-        # batch = self.memory.sample()
-        batch = random.sample(self.memory, self.batch_size)
-        for state, action, reward, state_next, done in batch:
-            q_update = reward
-            if done:
-                q_values[0][action] = reward
-            else:
-                q_values[0][action] = reward + self.gamma * numpy.max(self.target_model.predict(next_state
-            q_values = self.model.predict(state)
-            q_values[0][action] = q_update
-            self.model.fit(state, q_values, verbose=0)
-        self.exploration_rate *= self.exploration_decay
-        self.exploration_rate = max(self.exploration_min, self.exploration_rate)
-%TODO : comparer dfit dans et hors du for
-
-
-    def update_target_network(self):
-        """
-        Met a jour le target model a partir du model
-        """
-        self.target_model.set_weights(self.model.get_weights())
-
-
+\begin{lstlisting}[language=Python, caption=Paramétrage de l'agent DQN]
 if __name__ == '__main__':
     env = gym.make('CartPole-v1')
 
@@ -521,18 +420,18 @@ if __name__ == '__main__':
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
     memory_size = 100000
-    batch_size = 64  # 64
-    gamma = 0.99  # 0.99  # importance des recompenses a l'infini
-    learning_rate = 0.001  # taux d'apprentissage de l'erreur entre la cible et la prediction
-    exploration_rate = 1  # pour savoir si on prend une action random ou la meilleure action
-    exploration_decay = 0.995  # pour faire descendre l'exploration_rate pour baisser le nombre d'explorations au fur et a mesure que l'agent apprend et devient meilleur
+    batch_size = 64
+    gamma = 0.99
+    learning_rate = 0.001
+    exploration_rate = 1
+    exploration_decay = 0.995
     exploration_min = 0.01
 
     # constantes pour l'execution
     nb_episodes = 200
-    update_target_network = 100  # pas pour mettre a jour le target network
-    save_weights = False  # True pour sauvegarder les poids du reseau dans un fichier tous les save_step episodes
-    save_step = 10  # pas pour sauvegarder les poids du reseau
+    update_target_network = 100
+    save_weights = False
+    save_step = 10
 
     # creation de l'agent avec ses parametres
     params = {
@@ -547,18 +446,20 @@ if __name__ == '__main__':
         'exploration_min': exploration_min
     }
     agent = DQNAgent(params)
-    liste_rewards = []  # liste des recompenses obtenues pour chaque episode, permet de tracer le plot
-    global_counter = 0
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Programme principal de l'agent DQN]
+liste_rewards = []
+global_counter = 0
     for i in range(nb_episodes):
         state = env.reset()
-        # [ 0.0273208   0.01715898 -0.03423725  0.01013875] => [[ 0.0273208   0.01715898 -0.03423725  0.01013875]]
-        state = numpy.reshape(state, [1, env.observation_space.shape[0]])  # TODO: pour avoir un vecteur de 1
+        state = numpy.reshape(state, [1, env.observation_space.shape[0]])
         steps = 1
         sum_reward = 0
         while True:
-            action = agent.act(state, "greedy")  # choix d'une action (greedy: soit aleatoire soit via le reseau)
-            next_state, reward, done, _ = env.step(action)  # on "execute" l'action sur l'environnement
-            next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])  # TODO:
+            action = agent.act(state, "greedy")
+            next_state, reward, done, _ = env.step(action)
+            next_state = numpy.reshape(next_state, [1, env.observation_space.shape[0]])
             agent.remember(state, action, reward, next_state, done)
             state = next_state
             sum_reward += reward
@@ -567,19 +468,17 @@ if __name__ == '__main__':
                 print("Episode", i, "- nombre de pas : ", steps, "- somme recompenses", sum_reward)
                 break
             if global_counter % update_target_network == 0:
-                # on met a jour le target network tous les `update_target_network` pas
-                print("Le target network se met a jour")
                 agent.update_target_network()
             steps += 1
             global_counter += 1
         liste_rewards.append(sum_reward)
         if save_weights and i % save_step == 0:
-            print("Sauvegarde des poids du modele")
             agent.model.save_weights("./cartpole_dqn.h5")
     evolution_rewards(liste_rewards)
     print("Meilleure recompense obtenue", max(liste_rewards), "lors de l'episode", liste_rewards.index(max(liste_rewards)))
-
 \end{lstlisting}
+
+
 
 \subsection{Calcul des Q-valeurs}
 
